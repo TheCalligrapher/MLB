@@ -4,21 +4,21 @@
 #include "../base/mlb_config.h"
 #include "../base/mlb_pp.h"
 
-#define MLB_AB__(a_, b_) a_ b_
-#define MLB_CAB__(a_, b_) , a_ b_
-#define MLB_B__(a_, b_) b_
-#define MLB_CB__(a_, b_) , b_
+#define MLB_2_AB__(a_, b_) a_ b_
+#define MLB_2_CAB__(a_, b_) , a_ b_
+#define MLB_2_B__(a_, b_) b_
+#define MLB_2_CB__(a_, b_) , b_
 
-#define MLB_CPAIR__(...) MLB_APPLY_2(MLB_CAB__, ##__VA_ARGS__)
+#define MLB_CPAIR__(...) MLB_APPLY_2(MLB_2_CAB__, ##__VA_ARGS__)
 /* Includes leading comma for non-empty result */
 
-#define MLB_PAIR__(...) MLB_APPLY_FM_2(MLB_AB__, MLB_CAB__, ##__VA_ARGS__)
+#define MLB_PAIR__(...) MLB_APPLY_FM_2(MLB_2_AB__, MLB_2_CAB__, ##__VA_ARGS__)
 /* Doesn't include leading comma */
 
-#define MLB_CEVEN__(...) MLB_APPLY_2(MLB_CB__, ##__VA_ARGS__)
+#define MLB_CEVEN__(...) MLB_APPLY_2(MLB_2_CB__, ##__VA_ARGS__)
 /* Includes leading comma for non-empty result */
 
-#define MLB_EVEN__(...) MLB_APPLY_FM_2(MLB_B__, MLB_CB__, ##__VA_ARGS__)
+#define MLB_EVEN__(...) MLB_APPLY_FM_2(MLB_2_B__, MLB_2_CB__, ##__VA_ARGS__)
 /* Doesn't include leading comma */
 
 #define MLB_CPP_WRAPPER_DEF(type_, c_name_, cpp_name_, ...)\

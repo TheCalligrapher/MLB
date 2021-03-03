@@ -52,7 +52,7 @@ typedef unsigned char CoByte;
   #define CO_RCON_ONLY(x_) x_
   #define CO_RCON_ARG(x_) x_,
 
-  #define CO_ROOT_SUSG sizeof(CoRootContext)
+  #define CO_ROOT_SUSG MLB_STRICT_ALIGN_UP(sizeof(CoRootContext), MLB_STRICT_ALIGN_MAX)
   #define CORC (*corc__)
 
 #else /* CO_ENABLE_ROOT_CONTEXT */
@@ -142,13 +142,16 @@ struct CoRootDbgContext__
 
 #define COL_TYPE__(f_) struct MLB_PP_CONCAT(CoLocals__, f_)
 
-#define COL_BEGIN_STATIC__(f_) COL_TYPE__(f_) {
-#define COL_BEGIN_DYNAMIC__(f_) COL_TYPE__(f_) { CoByte *co_persistent_brk__; 
+#define COL_BEGIN_STATIC__(f_) COL_TYPE__(f_) { struct
+#define COL_BEGIN_DYNAMIC__(f_) COL_TYPE__(f_) { CoByte *co_persistent_brk__; struct
 /* Functions that support 'CO_ALLOCA' need a persistent pointer to the current top of the 
    stack. Functions that do not support 'CO_ALLOCA' can get by with a local non-persistent 
-   (calculated) pointer to the current top of the stack */
+   (calculated) pointer to the current top of the stack 
+   
+   A nested anonymous truct is intended to facilitate enclosing locals into '{}' braces 
+   for purely cosmetic reasons */
 
-#define COL_END__ };
+#define COL_END__ ;};
 
 #define COL_SUSG(f_) sizeof(COL_TYPE__(f_))
 
@@ -158,7 +161,9 @@ struct CoRootDbgContext__
 /* Function declaration 
 
     CO_PROTOTYPE(foo, params)
+    {
       locals
+    }
     CO_PROTOTYPE_END
 */
 
@@ -180,13 +185,20 @@ struct CoRootDbgContext__
 #define CO_PROTOTYPE_END COL_END__
 
 #ifndef _MSC_VER
-#define CO_PROTOTYPE_NO_LOCALS(f_, ...) CO_PROTOTYPE(f_, ##__VA_ARGS__) CO_PROTOTYPE_END
-#else _MSC_VER
-#define CO_PROTOTYPE_NO_LOCALS(f_, ...) CO_PROTOTYPE(f_, ##__VA_ARGS__) char dummy__; CO_PROTOTYPE_END
+  #define CO_PROTOTYPE_NO_LOCALS(f_, ...)\
+    CO_PROTOTYPE(f_, ##__VA_ARGS__) {} CO_PROTOTYPE_END
+#else
+  #define CO_PROTOTYPE_NO_LOCALS(f_, ...)\
+    CO_PROTOTYPE(f_, ##__VA_ARGS__) { char dummy__; } CO_PROTOTYPE_END
 #endif
 
-#define CO_SUSG(f_) (CO_ROOT_SUSG + COP_SUSG(f_) + COL_SUSG(f_))
+#define COF_SUSG(f_) (COP_SUSG(f_) + COL_SUSG(f_))
+#define COF_ROOT_SUSG(f_) (CO_ROOT_SUSG + COF_SUSG(f_))
 /* Static stack usage of a co-function */
+
+#define COF_1_PLUS_SUSG__(a_) + COF_SUSG(a_)
+#define COF_SUSGS(...) MLB_APPLY_FM_1(COL_SUSG, COF_1_PLUS_SUSG__, ##__VA_ARGS__)
+#define COF_ROOT_SUSGS(...) (CO_ROOT_SUSG + COF_SUSGS(__VA_ARGS__))
 
 /****************************************************************************************/
 /* Function stratup */
@@ -254,7 +266,9 @@ struct CoRootDbgContext__
 /* Standalone function definition 
 
     CO_PROTOTYPE(foo, params)
+    {
       locals
+    }
     CO_BODY(foo)
     {
       CO_BEGIN or CO_BEGIN_DYNAMIC
@@ -388,7 +402,7 @@ struct CoRootDbgContext__
   } while (0)
 
 #define CO_ROOT_INVOKE_L(id, f_, ...)\
-  CO_ROOT_INVOKE_SSIZE_L(id, CO_SUSG(f_), f_, ##__VA_ARGS__)
+  CO_ROOT_INVOKE_SSIZE_L(id, COF_ROOT_SUSG(f_), f_, ##__VA_ARGS__)
 
 /****************************************************************************************/
 
@@ -408,7 +422,7 @@ struct CoRootDbgContext__
   } while (0)
 
 #define CO_ROOT_INVOKE(id_, f_, ...)\
-  CO_ROOT_SSIZE_INVOKE(id, CO_SUSG(f_), f_, ##__VA_ARGS__)
+  CO_ROOT_SSIZE_INVOKE(id, COF_ROOT_SUSG(f_), f_, ##__VA_ARGS__)
 
 #define CO_ROOT_BEGIN do { unsigned co_entries__ = 0; do {
 #define CO_ROOT_END } while (co_entries__ > 0); } while (0);

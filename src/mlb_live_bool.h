@@ -101,12 +101,14 @@ static inline MlbLiveBools *mlb_lbs_init(MlbLiveBools *mlb_lbs,
 /****************************************************************************************/
 
 CO_PROTOTYPE_DYNAMIC(mlb_lbs_execute, MlbLiveBools *mlb_lbs)
+{
   unsigned long *starts;
+}
 CO_PROTOTYPE_END
 
 #define MLB_LBS_DYN_SUSG__(n_) ((n_) * sizeof(unsigned long))
 #define MLB_LBS_SUSG(n_)\
-  (MLB_STRICT_ALIGN_UP(CO_SUSG(mlb_lbs_execute), alignof(unsigned long)) +\
+  (MLB_STRICT_ALIGN_UP(COF_SUSG(mlb_lbs_execute), alignof(unsigned long)) +\
    MLB_LBS_DYN_SUSG__(n_))
 
 /****************************************************************************************/

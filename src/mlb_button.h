@@ -234,22 +234,25 @@ static inline MlbButtons *mlb_btns_post(MlbButtons *mlb_btns)
 
 /****************************************************************************************/
 
-#define MLB_BTN_MAX_SUSG CO_SUSG(mlb_typematic_button_execute)
+#define MLB_BTN_MAX_SUSG COF_SUSG(mlb_typematic_button_execute)
 mlb_static_assert(MLB_BTN_MAX_SUSG == 
-  MLB_MAX(CO_SUSG(mlb_single_button_execute), 
-  MLB_MAX(CO_SUSG(mlb_long_button_execute), 
-          CO_SUSG(mlb_typematic_button_execute))));
+  MLB_MAX(COF_SUSG(mlb_single_button_execute), 
+  MLB_MAX(COF_SUSG(mlb_long_button_execute), 
+          COF_SUSG(mlb_typematic_button_execute))));
 
-#define MLB_BTN_ALIGNED_MAX_SUSG__ MLB_STRICT_ALIGN_UP(MLB_BTN_MAX_SUSG, MLB_STRICT_ALIGN_MAX)
+#define MLB_BTN_ALIGNED_MAX_SUSG__\
+  MLB_STRICT_ALIGN_UP(MLB_BTN_MAX_SUSG, MLB_STRICT_ALIGN_MAX)
 
 CO_PROTOTYPE_DYNAMIC(mlb_buttons_execute, MlbButtons *mlb_btns)
-  unsigned char (*sub_stacks)[MLB_BTN_ALIGNED_MAX_SUSG__];
+{
+  unsigned char (*sub_stacks)[CO_ROOT_SUSG + MLB_BTN_ALIGNED_MAX_SUSG__];
   unsigned i;
+}
 CO_PROTOTYPE_END
 
-#define MLB_BTNS_DYN_SUSG__(n_) ((n_) * MLB_BTN_ALIGNED_MAX_SUSG__)
+#define MLB_BTNS_DYN_SUSG__(n_) ((n_) * (CO_ROOT_SUSG + MLB_BTN_ALIGNED_MAX_SUSG__))
 #define MLB_BTNS_SUSG(n_)\
-  (MLB_STRICT_ALIGN_UP(CO_SUSG(mlb_buttons_execute), MLB_STRICT_ALIGN_MAX) +\
+  (MLB_STRICT_ALIGN_UP(COF_SUSG(mlb_buttons_execute), MLB_STRICT_ALIGN_MAX) +\
    MLB_BTNS_DYN_SUSG__(n_))
 
 /****************************************************************************************/

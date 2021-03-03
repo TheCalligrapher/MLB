@@ -123,13 +123,15 @@ void mlb_leds_attach_mlb_lbs(MlbLeds *mlb_leds, const MlbLiveBools *mlb_lbs);
 /****************************************************************************************/
 
 CO_PROTOTYPE_DYNAMIC(mlb_leds_execute, MlbLeds *mlb_leds)
+{
   unsigned i_led;
   MlbBool *states;
+}
 CO_PROTOTYPE_END
 
 #define MLB_LEDS_DYN_SUSG__(n_) ((n_) * sizeof(MlbBool))
 #define MLB_LEDS_SUSG(n_)\
-  (MLB_STRICT_ALIGN_UP(CO_SUSG(mlb_leds_execute), alignof(MlbBool)) +\
+  (MLB_STRICT_ALIGN_UP(COF_SUSG(mlb_leds_execute), alignof(MlbBool)) +\
    MLB_LBS_DYN_SUSG__(n_))
 
 /****************************************************************************************/
