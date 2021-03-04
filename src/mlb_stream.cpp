@@ -8,5 +8,19 @@
   MLB_CPP_WRAPPER_DEF(int, mlb_stream_read, read);
   MLB_CPP_WRAPPER_DEF(int, mlb_stream_peek, peek);
 
+  MLB_CPP_WRAPPER_DEF(void, mlb_stream_set_timeout, setTimeout, unsigned long, timeout);
+  MLB_CPP_WRAPPER_DEF(unsigned long, mlb_stream_get_timeout, getTimeout);
+
+  MLB_CPP_WRAPPER_DEF(bool, mlb_stream_find, find, char *, s);
+  MLB_CPP_WRAPPER_DEF(bool, mlb_stream_find_n, find, char *, target, size_t, length);
+  MLB_CPP_WRAPPER_DEF(bool, mlb_stream_find_until, findUntil, char *, target, 
+                      char *, terminator);
+  MLB_CPP_WRAPPER_DEF(bool, mlb_stream_find_until_n, findUntil, char *, target, 
+                      size_t, targetLen, char *, terminator, size_t, termLen);
+  MLB_CPP_WRAPPER_DEF(size_t, mlb_stream_read_bytes, readBytes, char *, buffer, 
+                      size_t, length);
+  MLB_CPP_WRAPPER_DEF(size_t, mlb_stream_read_bytes_until, readBytesUntil, 
+                      char, terminator, char *, buffer, size_t, length);
+
 #undef MLB_CPP_WRAPPER_C_STRUCT
 #undef MLB_CPP_WRAPPER_CPP_CLASS

@@ -11,7 +11,9 @@ C_LINKAGE_BEGIN
 
 /****************************************************************************************/
 
-void *mlb_serial(void);
+typedef struct MlbSerial MlbSerial;
+
+MlbSerial *mlb_serial(void);
 
 void mlb_serial_begin(unsigned long baud);
 

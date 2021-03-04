@@ -10,7 +10,7 @@
 #include <stdlib.h>
 
 /****************************************************************************************/
-/* Configuration supplied by the client translation unit:
+/* Configuration supplied by the client translation unit after including 'mlb_assert.h'
 
    * 'MLB_ASSERT_STR_WRAPPER(x)' macro
 

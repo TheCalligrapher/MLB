@@ -82,11 +82,12 @@ void mlb_abort(void);
 
 /****************************************************************************************/
 
-#define MLB_MLS_01SECOND 100ul
-#define MLB_MLS_1SECOND  1000ul
-#define MLB_MLS_1MINUTE  60000ul
-#define MLB_MLS_1HOUR    3600000ul
-#define MLB_MLS_INF      ULONG_MAX
+#define MLB_MLS_001SECOND  10ul
+#define MLB_MLS_01SECOND   100ul
+#define MLB_MLS_1SECOND    1000ul
+#define MLB_MLS_1MINUTE    60000ul
+#define MLB_MLS_1HOUR      3600000ul
+#define MLB_MLS_INF        ULONG_MAX
 
 extern unsigned long g_mlb_current_millis;
 

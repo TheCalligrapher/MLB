@@ -1,9 +1,9 @@
 #include "mlb_serial.h"
 #include "impl/mlb_wrapper.h"
 
-void *mlb_serial(void)
+MlbSerial *mlb_serial(void)
 {
-  return &Serial;
+  return (MlbSerial *) &Serial;
 }
 
 #define MLB_CPP_WRAPPER_GLOBAL Serial

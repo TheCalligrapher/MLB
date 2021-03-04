@@ -3,9 +3,9 @@
 
 #include <SPI.h>
 
-void *mlb_spi(void)
+MlbSpi *mlb_spi(void)
 {
-  return &SPI;
+  return (MlbSpi *) &SPI;
 }
 
 #define MLB_CPP_WRAPPER_GLOBAL SPI

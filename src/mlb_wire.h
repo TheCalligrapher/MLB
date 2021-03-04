@@ -9,7 +9,9 @@ C_LINKAGE_BEGIN
 
 /****************************************************************************************/
 
-void *mlb_wire(void);
+typedef struct MlbWire MlbWire;
+
+MlbWire *mlb_wire(void);
 
 void mlb_wire_begin(void);
 

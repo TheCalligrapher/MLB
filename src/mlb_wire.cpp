@@ -3,9 +3,9 @@
 
 #include <Wire.h>
 
-void *mlb_wire(void)
+MlbWire *mlb_wire(void)
 {
-  return &Wire;
+  return (MlbWire *) &Wire;
 }
 
 #define MLB_CPP_WRAPPER_GLOBAL Wire

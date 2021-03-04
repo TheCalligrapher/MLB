@@ -9,7 +9,9 @@ C_LINKAGE_BEGIN
 
 /****************************************************************************************/
 
-void *mlb_spi(void);
+typedef struct MlbSpi MlbSpi;
+
+MlbSpi *mlb_spi(void);
 
 void mlb_spi_begin(void);
 
