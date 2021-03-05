@@ -3,7 +3,7 @@
 
 #include "mlb_config.h"
 
-#ifdef MLB_USE_STDLIB_ASSERT
+#if MLB_USE_STDLIB_ASSERT
   #include <assert.h>
 #endif /* MLB_USE_STDLIB_ASSERT */
 
@@ -43,7 +43,7 @@ extern "C" {
 
 #endif  /* NDEBUG */
 
-#ifndef MLB_USE_STDLIB_ASSERT
+#if !MLB_USE_STDLIB_ASSERT
 
   #undef assert
   #define assert(c) MLB_ASSERT(c)

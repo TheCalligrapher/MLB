@@ -110,7 +110,7 @@ CO_PROTOTYPE_NO_LOCALS(co_wait_for_pin_lim,
 
 #define co_wait_for_stable_pin_lim_inline(ui8_pin /* p */, ui8_target_state /* p */,\
                                           ul_duration /* p */ , ui8_final_state /* pw */) do {\
-    (ui8_final_state) = UNDEFINED;\
+    (ui8_final_state) = MLB_UNDEFINED;\
     if ((ul_duration) == 0)\
       break;\
     \
@@ -160,11 +160,11 @@ CO_PROTOTYPE_NO_LOCALS(co_wait_for_stable_pin_lim,
 
 /****************************************************************************************/
 
-#if defined(CO_TRACK_STACK_USAGE) || defined(CO_REPORT_STACK_SIZE)
+#if CO_TRACK_STACK_USAGE || CO_REPORT_STACK_SIZE
   extern void *g_mlb_susg_printer;
   void mlb_co_susg_default_reporter(unsigned id, size_t usage);
   void mlb_co_ssize_default_reporter(unsigned id, size_t size);
-#endif /* CO_TRACK_STACK_USAGE */
+#endif
 
 /****************************************************************************************/
 

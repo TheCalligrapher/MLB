@@ -70,7 +70,7 @@
 
 /****************************************************************************************/
 
-#ifdef MLB_STRICT_ALIGNMENT_REQUIRED
+#if MLB_STRICT_ALIGNMENT_REQUIRED
 
   #if defined(_MSC_VER) && !defined(__cplusplus)
     #define MLB_STRICT_ALIGN_MAX 8u

@@ -98,8 +98,8 @@ CO_FUNCTION_DEFINITION(mlb_long_button_execute)
     co_wait_for_stable_pin_lim_inline(COP.btn->i_pin, released_state(COP.btn),
       mlb_uis_to_millis(COP.btn->first_delay), final_state);
 
-    if (final_state == UNDEFINED)
-    { /* Let's not even try to register anything for 'UNDEFINED' */
+    if (final_state == MLB_UNDEFINED)
+    { /* Let's not even try to register anything for 'MLB_UNDEFINED' */
       co_wait_for_stable_pin_inline(COP.btn->i_pin, released_state(COP.btn)); 
       COP.btn->flags = MLB_RESET_BITS(COP.btn->flags, MLB_BTN_IS_DEPRESSED);
       continue;
@@ -156,7 +156,7 @@ CO_FUNCTION_DEFINITION(mlb_typematic_button_execute)
       continue;
     }
 
-    if (final_state != UNDEFINED)
+    if (final_state != MLB_UNDEFINED)
       register_push(COP.btn);
 
     do
@@ -170,7 +170,7 @@ CO_FUNCTION_DEFINITION(mlb_typematic_button_execute)
         break;
       }
 
-      if (final_state != UNDEFINED)
+      if (final_state != MLB_UNDEFINED)
         register_push(COP.btn);
 
     } while (true);

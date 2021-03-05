@@ -18,9 +18,18 @@ C_LINKAGE_BEGIN
 
 /****************************************************************************************/
 
-#define UNDEFINED 0xFF
+#define MLB_UNDEFINED 0xFF
 /* To accompany 'LOW' and 'HIGH' */
-mlb_static_assert(UNDEFINED != LOW && UNDEFINED != HIGH);
+mlb_static_assert(MLB_UNDEFINED != LOW && MLB_UNDEFINED != HIGH);
+
+#ifndef ARDUINO_ARCH_SAMD
+  #define MLB_LED_BUILTIN_OFF LOW
+  #define MLB_LED_BUILTIN_ON  HIGH
+#else
+  #define MLB_LED_BUILTIN_OFF HIGH
+  #define MLB_LED_BUILTIN_ON  LOW
+  /* At least Seeeduino XIAO has these levels reversed */
+#endif
 
 /****************************************************************************************/
 

@@ -12,7 +12,7 @@
 
 /****************************************************************************************/
 
-#ifdef CO_TRACK_STACK_USAGE
+#if CO_TRACK_STACK_USAGE
   #define CO_SUSG_ONLY(x_) x_
   #define CO_SUSG_ARG(x_) x_,
 #else /* CO_TRACK_STACK_USAGE */
@@ -20,7 +20,7 @@
   #define CO_SUSG_ARG(x_)
 #endif /* CO_TRACK_STACK_USAGE */
 
-#if defined(CO_TRACK_STACK_USAGE) || !defined(NDEBUG)
+#if CO_TRACK_STACK_USAGE || !defined(NDEBUG)
   #define CO_DBG_SUSG_ONLY(x_) x_
   #define CO_DBG_SUSG_ARG(x_) x_,
 #else /* CO_TRACK_STACK_USAGE || !NDEBUG */
@@ -28,9 +28,9 @@
   #define CO_DBG_SUSG_ARG(x_)
 #endif /* CO_TRACK_STACK_USAGE || !NDEBUG */
 
-#ifdef CO_REPORT_STACK_SIZE
+#if CO_REPORT_STACK_SIZE
   #define CO_REPORT_SSIZE_ONLY(x_) x_
-#else 
+#else /* CO_REPORT_STACK_SIZE */
   #define CO_REPORT_SSIZE_ONLY(x_)
 #endif /* CO_REPORT_STACK_SIZE */
 
@@ -47,7 +47,7 @@ typedef unsigned char CoByte;
 
 /****************************************************************************************/
 
-#ifdef CO_ENABLE_ROOT_CONTEXT
+#if CO_ENABLE_ROOT_CONTEXT
 
   #define CO_RCON_ONLY(x_) x_
   #define CO_RCON_ARG(x_) x_,
@@ -66,7 +66,7 @@ typedef unsigned char CoByte;
 
 /****************************************************************************************/
 
-#if defined(CO_TRACK_STACK_USAGE) || !defined(NDEBUG)
+#if CO_TRACK_STACK_USAGE || !defined(NDEBUG)
 
 struct CoRootDbgContext__
 {
@@ -93,7 +93,7 @@ struct CoRootDbgContext__
 
 #endif /* CO_TRACK_STACK_USAGE || !NDEBUG */
 
-#ifdef CO_TRACK_STACK_USAGE
+#if CO_TRACK_STACK_USAGE
 
   #define CO_UPDATE_SUSG__()\
     (CODRC.co_stack_usage__ = MLB_MAX(CODRC.co_stack_usage__, CO_STACK_USAGE__()))
@@ -109,7 +109,7 @@ struct CoRootDbgContext__
 
 #endif /* CO_TRACK_STACK_USAGE */
 
-#ifdef CO_REPORT_STACK_SIZE
+#if CO_REPORT_STACK_SIZE
 
   extern void (*g_co_ssize_reporter)(unsigned id, size_t size);
 
@@ -122,11 +122,45 @@ struct CoRootDbgContext__
 #endif /* CO_REPORT_STACK_SIZE */
 
 /****************************************************************************************/
+/* Jump method */
+
+#if CO_USE_RUNTIME_GOTO
+
+  typedef void *CoState__;
+
+  #define CO_LABEL__(i_) MLB_PP_CONCAT(MLB_PP_CONCAT(MLB_PP_CONCAT(co_lbl__, __LINE__), _), i_)
+  #define CO_STATE__(i_) &&CO_LABEL__(i_)
+
+  #define CO_STATE_DISPATCHER_BEGIN__ if (COP.co_state__ != 0) goto *COP.co_state__;
+  #define CO_STATE_DISPATCHER_END__ COP.co_state__ = 0;
+
+#else /* CO_USE_RUNTIME_GOTO */
+
+  typedef size_t CoState__;
+
+  #define CO_MAX_LINES__ 1024u
+  /* Assumes that no co-function is longer than 'CO_MAX_LINES' lines, i.e. 
+     '__LINE__ % CO_MAX_LINES' produces a unique label within a given function */
+
+  #define CO_LINE_ID__(i_) (1u + (i_) * CO_MAX_LINES__ + __LINE__ % CO_MAX_LINES__)
+
+  #define CO_LABEL__(i_) case CO_LINE_ID__(i_)
+  #define CO_STATE__(i_) CO_LINE_ID__(i_)
+
+  #define CO_STATE_DISPATCHER_BEGIN__ switch (COP.co_state__) { case 0:
+  #define CO_STATE_DISPATCHER_END__ } COP.co_state__ = 0;
+  /* It is important to set 'co_state__' to zero once the function is completed (i.e. at 
+     "full" exit, not at yield). This is to ensure that the caller knows the function is 
+     finished (see 'CO_INVOKE', for example) */
+
+#endif /* CO_USE_RUNTIME_GOTO */
+
+/****************************************************************************************/
 /* Parametrs */
 
 #define COP_TYPE__(f_) struct MLB_PP_CONCAT(CoParams__, f_)
 
-#define COP_BEGIN__(f_) COP_TYPE__(f_) { size_t co_state__;
+#define COP_BEGIN__(f_) COP_TYPE__(f_) { CoState__ co_state__;
 /* 'co_state__' field is a part of parameters struct, not of locals struct. This is done 
    that way to make its location predictable to the caller, since caller sometimes has to 
    access callee's 'co_state__' */
@@ -249,18 +283,25 @@ struct CoRootDbgContext__
 
 #define CO_BEGIN\
   CO_BOOTSTRAP_FRAME_STATIC__();\
-  switch (COP.co_state__) { case 0:\
-    CO_SETUP_FRAME_STATIC__();
+  CO_STATE_DISPATCHER_BEGIN__;\
+  CO_SETUP_FRAME_STATIC__();
 
 #define CO_BEGIN_DYNAMIC\
   CO_BOOTSTRAP_FRAME_DYNAMIC__();\
-  switch (COP.co_state__) { case 0:\
-    CO_SETUP_FRAME_DYNAMIC__();
+  CO_STATE_DISPATCHER_BEGIN__;\
+  CO_SETUP_FRAME_DYNAMIC__();
 
-#define CO_END }} COP.co_state__ = 0; 
-/* It is important to set 'co_state__' to zero once the function is completed (i.e. at 
-   "full" exit, not at yield). This is to ensure that the caller knows the function is 
-   finished */
+#define CO_END CO_STATE_DISPATCHER_END__; }
+/* This closing brace will actually end up being a match for the user-provided opening 
+   brace after 'CO_FUNCTION_DEFINITION'. Meanwhile, the user-provided closing brace at the 
+   end of function body will match the opening brace inside 'CO_FUNCTION_DEFINITION' */
+
+#define CO_YIELD__(i_) do {\
+    COP.co_state__ = CO_STATE__(i_); return; CO_LABEL__(i_):;\
+  } while (0)
+
+#define CO_YIELD() CO_YIELD__(0)
+#define CO_RETURN() do { COP.co_state__ = 0; return; } while (0)
 
 /****************************************************************************************/
 /* Standalone function definition 
@@ -309,21 +350,6 @@ struct CoRootDbgContext__
 
 #define CO_ALLOCA_T(T_, count_) CO_ALLOCA((size_t) count_ * sizeof(T_), alignof(T_))  
 #define CO_ZALLOCA_T(T_, count_) CO_ZALLOCA((size_t) count_ * sizeof(T_), alignof(T_))
-
-/****************************************************************************************/
-
-#define CO_MAX_LINES__ 1024u
-/* Assumes that no co-function is longer than 'CO_MAX_LINES' lines, i.e. 
-   '__LINE__ % CO_MAX_LINES' produces a unique label within a given function */
-
-#define CO_LINE_ID__(i_) (1u + (i_) * CO_MAX_LINES__ + __LINE__ % CO_MAX_LINES__)
-
-#define CO_YIELD__(i_) do {\
-    COP.co_state__ = CO_LINE_ID__(i_); return; case CO_LINE_ID__(i_):;\
-  } while (0)
-
-#define CO_YIELD() CO_YIELD__(0)
-#define CO_RETURN() do { COP.co_state__ = 0; return; } while (0)
 
 /****************************************************************************************/
 

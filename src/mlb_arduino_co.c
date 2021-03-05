@@ -40,7 +40,7 @@ CO_FUNCTION_DEFINITION(co_wait_for_stable_pin_lim)
 
 /****************************************************************************************/
 
-#if defined(CO_TRACK_STACK_USAGE) || defined(CO_REPORT_STACK_SIZE)
+#if CO_TRACK_STACK_USAGE || CO_REPORT_STACK_SIZE
 
 void *g_mlb_susg_printer;
 
