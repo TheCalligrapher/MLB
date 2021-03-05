@@ -1,5 +1,5 @@
-#ifndef MLB_UTIL_H_
-#define MLB_UTIL_H_
+#ifndef MLB_ARDUINO_UTIL_H_
+#define MLB_ARDUINO_UTIL_H_
 
 #include "base/mlb_config.h"
 
@@ -133,4 +133,4 @@ static inline unsigned long mlb_uis_to_millis(MlbUis ui)
 
 C_LINKAGE_END
 
-#endif /* MLB_UTIL_H_ */
+#endif /* MLB_ARDUINO_UTIL_H_ */

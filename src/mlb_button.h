@@ -207,16 +207,16 @@ typedef struct MlbButtons
   uint8_t flags;
 } MlbButtons;
 
-#define MLB_BTNA_NAME(name_) MLB_PP_CONCAT(name_, _btna)
+#define MLB_BTNSA_NAME(name_) MLB_PP_CONCAT(name_, _btna)
 
 mlb_static_assert((MLB_BTN_SINGLE | MLB_BTN_PULL_DOWN) == 0);
 #define MLB_BTNS_SINGLE_PD_N(n_)\
-  static MlbButton MLB_BTNA_NAME(name_)[n_] = { 0 };\
-  linkage_ MlbButtons name_ = { MLB_BTNA_NAME(name_), n_ };
+  static MlbButton MLB_BTNSA_NAME(name_)[n_] = { 0 };\
+  linkage_ MlbButtons name_ = { MLB_BTNSA_NAME(name_), n_ };
 
 #define MLB_BTNS(linkage_, name_, ...)\
-  static MlbButton MLB_BTNA_NAME(name_)[] = { __VA_ARGS__ };\
-  linkage_ MlbButtons name_ = { MLB_BTNA_NAME(name_), MLB_ARRAY_N(MLB_BTNA_NAME(name_)) };
+  static MlbButton MLB_BTNSA_NAME(name_)[] = { __VA_ARGS__ };\
+  linkage_ MlbButtons name_ = { MLB_BTNSA_NAME(name_), MLB_ARRAY_N(MLB_BTNSA_NAME(name_)) };
 
 /****************************************************************************************/
 

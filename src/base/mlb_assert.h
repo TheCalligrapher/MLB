@@ -3,17 +3,17 @@
 
 #include "mlb_config.h"
 
-#ifdef __cplusplus
+#if MLB_USE_CPP_STD
   #if MLB_USE_STDLIB_ASSERT
     #include <cassert>
   #endif /* MLB_USE_STDLIB_ASSERT */
   #include <cstdlib>
-#else /* __cplusplus */
+#else /* MLB_USE_CPP_STD */
   #if MLB_USE_STDLIB_ASSERT
-    #include <assert,h>
+    #include <assert.h>
   #endif /* MLB_USE_STDLIB_ASSERT */
-#include <stdlib.h>
-#endif /* __cplusplus */
+  #include <stdlib.h>
+#endif /* MLB_USE_CPP_STD */
 
 /****************************************************************************************/
 /* Configuration supplied by the client translation unit after including 'mlb_assert.h'

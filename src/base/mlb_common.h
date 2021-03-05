@@ -9,12 +9,14 @@
   #include <cstddef>
   #include <cstdlib>
   #include <cstdint>
+  #include <cstdarg>
 #else 
   #include <limits.h>
   #include <stddef.h>
   #include <stdlib.h>
   #include <stdbool.h>
   #include <stdint.h>
+  #include <stdarg.h>
   #ifndef _MSC_VER
     #include <stdalign.h>
   #endif /* _MSC_VER */
