@@ -22,6 +22,8 @@
   * 'void co_init_root_context(CoRootContext *)' function
   * 'bool co_process_root_context(CoRootContext *)' function */
 
+/****************************************************************************************/
+
 #ifndef CO_USE_RUNTIME_GOTO
   #ifdef __GNUC__
     #define CO_USE_RUNTIME_GOTO 1

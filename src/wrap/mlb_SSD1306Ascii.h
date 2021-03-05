@@ -11,7 +11,8 @@ typedef struct DevType DevType;
 #include <SSD1306init.h>
 #include <fonts/allFonts.h>
 
-#include "mlb_util.h"
+#include "base/mlb_common.h"
+#include "mlb_arduino_util.h"
 #include "mlb_arduino_co.h"
 
 C_LINKAGE_BEGIN

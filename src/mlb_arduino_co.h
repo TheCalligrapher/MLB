@@ -1,9 +1,13 @@
 #ifndef MLB_ARDUINO_CO_H_
 #define MLB_ARDUINO_CO_H_
 
-#include "mlb_util.h"
+#include "base/mlb_config.h"
 
+#include "base/mlb_common.h"
 #include "co/mlb_co.h"
+
+#include <Arduino.h>
+#include "mlb_arduino_util.h"
 
 C_LINKAGE_BEGIN
 
@@ -17,7 +21,7 @@ typedef struct CoRootContext
 
 static inline void co_init_root_context(CoRootContext *corc)
 {
-  *corc = (CoRootContext) { 0 };
+  *corc = MLB_INITIALIZER(CoRootContext, 0);
 }
 
 static inline bool co_process_root_context(CoRootContext *corc)
@@ -162,8 +166,8 @@ CO_PROTOTYPE_NO_LOCALS(co_wait_for_stable_pin_lim,
 
 #if CO_TRACK_STACK_USAGE || CO_REPORT_STACK_SIZE
   extern void *g_mlb_susg_printer;
-  void mlb_co_susg_default_reporter(unsigned id, size_t usage);
-  void mlb_co_ssize_default_reporter(unsigned id, size_t size);
+  void mlb_co_susg_default_reporter(unsigned id, STD_ size_t usage);
+  void mlb_co_ssize_default_reporter(unsigned id, STD_ size_t size);
 #endif
 
 /****************************************************************************************/

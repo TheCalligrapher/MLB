@@ -3,9 +3,8 @@
 
 #include "base/mlb_config.h"
 
-#include <stdbool.h>
-
-#include "mlb_util.h"
+#include "base/mlb_common.h"
+#include "mlb_arduino_util.h"
 #include "mlb_arduino_co.h"
 
 C_LINKAGE_BEGIN
@@ -18,6 +17,11 @@ typedef struct MlbLiveBool
   unsigned n_flips;
   unsigned long duration, next_duration;
 } MlbLiveBool;
+
+#define MLB_LB_INIT_OFF(on_) { 0 }
+#define MLB_LB_INIT_STEADY(on_) { (on_) }
+#define MLB_LB_INIT_ONE(duration_) { true, 1, (duration_) }
+#define MLB_LB_INIT_OSC(hperiod_) { true, UINT_MAX, (hperiod_), (hperiod_) }
 
 /****************************************************************************************/
 
@@ -71,10 +75,16 @@ typedef struct MlbLiveBools
   uint8_t flags;
 } MlbLiveBools;
 
-#define MLB_LBS_STATIC_INIT_STEADY(N) { (MlbLiveBool [N]) { 0 }, N }
+#define MLB_LBSA_NAME(name_) MLB_PP_CONCAT(name_, _lbsa)
 
-#define MLB_LBS_STATIC_INIT(...)\
-  { (MlbLiveBool []) { __VA_ARGS__ }, MLB_ARRAY_N(((MlbLiveBool []) { __VA_ARGS__ })) }
+#define MLB_LBS_OFF_N(linkage_, name_, n_)\
+  static MlbLiveBool MLB_LBSA_NAME(name_)[n_] = { 0 };\
+  linkage_ MlbLiveBools name_ = { MLB_LBSA_NAME(name_), n_ };
+
+#define MLB_LBS(linkage_, name_, ...)\
+  static MlbLiveBool MLB_LBSA_NAME(name_)[] = { __VA_ARGS__ };\
+  linkage_ MlbLiveBools name_ =\
+    { MLB_LBSA_NAME(name_), MLB_ARRAY_N(MLB_LBSA_NAME(name_)) };
 
 /****************************************************************************************/
 
@@ -93,7 +103,7 @@ static inline MlbLiveBools *mlb_lbs_init(MlbLiveBools *mlb_lbs,
                                          MlbLiveBool *lbs, unsigned n)
 { 
   assert(mlb_lbs != NULL);
-  *mlb_lbs = (MlbLiveBools) { lbs, n };
+  *mlb_lbs = MLB_INITIALIZER(MlbLiveBools, lbs, n);
   /* Doesn't call 'mlb_lbs_post' */
   return mlb_lbs;
 }

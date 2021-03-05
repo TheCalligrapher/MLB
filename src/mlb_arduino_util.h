@@ -3,11 +3,6 @@
 
 #include "base/mlb_config.h"
 
-#include <limits.h>
-#include <stdint.h>
-#include <stdbool.h>
-#include <stdlib.h>
-
 #include <Arduino.h>
 
 #include "base/mlb_assert.h"

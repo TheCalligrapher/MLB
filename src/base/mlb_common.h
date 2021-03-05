@@ -1,21 +1,42 @@
 #ifndef MLB_COMMON_H_
 #define MLB_COMMON_H_
 
+#include "mlb_assert.h"
 #include "mlb_config.h"
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <stdbool.h>
-
-#ifndef _MSC_VER
-  #include <stdalign.h>
-#endif /* _MSC_VER */
+#if MLB_USE_CPP_STD
+  #include <climits>
+  #include <cstddef>
+  #include <cstdlib>
+  #include <cstdint>
+#else 
+  #include <limits.h>
+  #include <stddef.h>
+  #include <stdlib.h>
+  #include <stdbool.h>
+  #include <stdint.h>
+  #ifndef _MSC_VER
+    #include <stdalign.h>
+  #endif /* _MSC_VER */
+#endif
 
 #include "mlb_pp.h"
 
 /****************************************************************************************/
 
-#if defined(_MSC_VER) && !defined(__cplusplus)
+#if MLB_USE_CPP_STD
+  #define STD_ std::
+#else
+  #define STD_
+#endif
+
+#if defined(_MSC_VER)
+  #define restrict __restrict
+#elif defined(__cplusplus)
+  #define restrict
+#endif
+
+#if !defined(__cplusplus) && defined(_MSC_VER)
   typedef unsigned long long max_align_t;
   #define alignas(n_) __declspec(align(n_))
   #define alignof(p_) _Alignof(p_)
@@ -24,13 +45,23 @@
 /****************************************************************************************/
 
 #ifdef __cplusplus
+
   #define C_LINKAGE_BEGIN extern "C" {
   #define C_LINKAGE_END }
+
   #define mlb_restrict
+
+  #define MLB_INITIALIZER(T, ...) (T{ __VA_ARGS__ })
+
 #else /* __cplusplus */
+
   #define C_LINKAGE_BEGIN
   #define C_LINKAGE_END
+
   #define mlb_restrict restrict
+
+  #define MLB_INITIALIZER(T, ...) ((T) { __VA_ARGS__ })
+
 #endif /* __cplusplus */
 
 /****************************************************************************************/
@@ -48,7 +79,7 @@
 #define MLB_ARRAY_N(a_) (sizeof (a_) / sizeof *(a_))
 
 #define MLB_SET_N(a_, n_, v_)\
-  do { for (size_t i = 0, n = (n_); i < n; ++i) (a_)[i] = (v_); } while (0)
+  do { for (STD_ size_t i = 0, n = (n_); i < n; ++i) (a_)[i] = (v_); } while (0)
 #define MLB_ZERO_N(a_, n_) MLB_SET_N(a_, n_, 0)
   
 /****************************************************************************************/
@@ -74,9 +105,10 @@
 
   #if defined(_MSC_VER) && !defined(__cplusplus)
     #define MLB_STRICT_ALIGN_MAX 8u
+    mlb_static_assert(alignof(STD_ max_align_t) == MLB_STRICT_ALIGN_MAX);
     /* To make it usable under 'alignas' declared as '__declspec(align(#))' */
   #else
-    #define MLB_STRICT_ALIGN_MAX alignof(max_align_t)
+    #define MLB_STRICT_ALIGN_MAX alignof(STD_ max_align_t)
   #endif
 
   #define MLB_STRICT_ALIGN_DELTA(v_, b_) MLB_ALIGN_DELTA(v_, b_)
@@ -87,7 +119,7 @@
 
 #else /* MLB_STRICT_ALIGNMENT_REQUIRED */
 
-  #define MLB_STRICT_ALIGN_MAX ((size_t) 1u)
+  #define MLB_STRICT_ALIGN_MAX ((STD_ size_t) 1u)
 
   #define MLB_STRICT_ALIGN_DELTA(v_, b_) 0u
   #define MLB_STRICT_ALIGN_UP_DELTA(v_, b_) 0u
@@ -97,8 +129,10 @@
 
 #endif /* MLB_STRICT_ALIGNMENT_REQUIRED */
 
-#define MLB_STRICT_ALIGN_PTR(p_, b_) ((void *) MLB_STRICT_ALIGN((uintptr_t) p_, b_))
-#define MLB_STRICT_ALIGN_UP_PTR(p_, b_) ((void *) MLB_STRICT_ALIGN_UP((uintptr_t) p_, b_))
+#define MLB_STRICT_ALIGN_PTR(p_, b_)\
+  ((void *) MLB_STRICT_ALIGN((STD_ uintptr_t) p_, b_))
+#define MLB_STRICT_ALIGN_UP_PTR(p_, b_)\
+  ((void *) MLB_STRICT_ALIGN_UP((STD_ uintptr_t) p_, b_))
 
 /****************************************************************************************/
 

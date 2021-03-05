@@ -3,10 +3,10 @@
 
 #include "base/mlb_config.h"
 
-#include "wrap/mlb_SSD1306Ascii.h"
+#include "base/mlb_common.h"
+#include "mlb_arduino_util.h"
 
-#include "mlb_util.h"
-#include "mlb_arduino_co.h"
+#include "wrap/mlb_SSD1306Ascii.h"
 
 C_LINKAGE_BEGIN
 

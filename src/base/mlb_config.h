@@ -15,4 +15,15 @@
 #ifndef MLB_STRICT_ALIGNMENT_REQUIRED
   #define MLB_STRICT_ALIGNMENT_REQUIRED 1
 #endif
+/* When set to '0', no effort is made to align data. When set to '1' the data is aligned 
+   by its natural alignment requirements. The latter could still be "unaligned" though, 
+   depending on the platform */
+
+/****************************************************************************************/
+
+#if !defined(__cplusplus) || (defined(__GNUC__) && defined(__AVR_ARCH__))
+  #define MLB_USE_CPP_STD 0
+#else
+  #define MLB_USE_CPP_STD 1
+#endif
 

@@ -2,7 +2,7 @@
 #define MLB_ARDUINO_FFT_H_
 
 #include "base/mlb_config.h"
-#include "mlb_util.h"
+#include "mlb_arduino_util.h"
 
 C_LINKAGE_BEGIN
 

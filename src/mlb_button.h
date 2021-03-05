@@ -3,11 +3,8 @@
 
 #include "base/mlb_config.h"
 
-#include <stdbool.h>
-#include <stdint.h>
-#include <stdarg.h>
-
-#include "mlb_util.h"
+#include "base/mlb_common.h"
+#include "mlb_arduino_util.h"
 #include "mlb_arduino_co.h"
 
 C_LINKAGE_BEGIN
@@ -80,21 +77,21 @@ typedef struct MlbButton
   unsigned n_pushes;
 } MlbButton;
 
-#define MLB_BTN_STATIC_INIT_SINGLE_PD(pin)\
+#define MLB_BTN_INIT_SINGLE_PD(pin)\
   { pin, MLB_BTN_SINGLE | MLB_BTN_PULL_DOWN | MLB_BTN_BUILT_IN_PULL } 
-#define MLB_BTN_STATIC_INIT_SINGLE_PU(pin)\
+#define MLB_BTN_INIT_SINGLE_PU(pin)\
   { pin, MLB_BTN_SINGLE | MLB_BTN_PULL_UP } 
 
-#define MLB_BTN_STATIC_INIT_LONG_PD(pin, delay)\
+#define MLB_BTN_INIT_LONG_PD(pin, delay)\
   { pin, MLB_BTN_LONG | MLB_BTN_PULL_DOWN | MLB_BTN_BUILT_IN_PULL,\
     (delay) / MLB_UIS_MUL } 
-#define MLB_BTN_STATIC_INIT_LONG_PU(pin, delay)\
+#define MLB_BTN_INIT_LONG_PU(pin, delay)\
   { pin, MLB_BTN_LONG | MLB_BTN_PULL_UP, (delay) / MLB_UIS_MUL } 
 
-#define MLB_BTN_STATIC_INIT_TPM_PD(pin, first, second)\
+#define MLB_BTN_INIT_TPM_PD(pin, first, second)\
   { pin, MLB_BTN_TYPEMATIC | MLB_BTN_PULL_DOWN | MLB_BTN_BUILT_IN_PULL | MLB_BTN_BUFFERED_FULL,\
     (first) / MLB_UIS_MUL, (second) / MLB_UIS_MUL } 
-#define MLB_BTN_STATIC_INIT_TPM_PU(pin, first, second)\
+#define MLB_BTN_INIT_TPM_PU(pin, first, second)\
   { pin, MLB_BTN_TYPEMATIC | MLB_BTN_BUFFERED_FULL | MLB_BTN_PULL_UP,\
     (first) / MLB_UIS_MUL, (second) / MLB_UIS_MUL } 
 
@@ -210,11 +207,16 @@ typedef struct MlbButtons
   uint8_t flags;
 } MlbButtons;
 
-mlb_static_assert((MLB_BTN_SINGLE | MLB_BTN_PULL_DOWN) == 0);
-#define MLB_BTNS_STATIC_INIT_SINGLE_PD(N) { (MlbButton [N]) { 0 }, N }
+#define MLB_BTNA_NAME(name_) MLB_PP_CONCAT(name_, _btna)
 
-#define MLB_BTNS_STATIC_INIT(...)\
-  { (MlbButton []) { __VA_ARGS__ }, MLB_ARRAY_N(((MlbButton []) { __VA_ARGS__ })) }
+mlb_static_assert((MLB_BTN_SINGLE | MLB_BTN_PULL_DOWN) == 0);
+#define MLB_BTNS_SINGLE_PD_N(n_)\
+  static MlbButton MLB_BTNA_NAME(name_)[n_] = { 0 };\
+  linkage_ MlbButtons name_ = { MLB_BTNA_NAME(name_), n_ };
+
+#define MLB_BTNS(linkage_, name_, ...)\
+  static MlbButton MLB_BTNA_NAME(name_)[] = { __VA_ARGS__ };\
+  linkage_ MlbButtons name_ = { MLB_BTNA_NAME(name_), MLB_ARRAY_N(MLB_BTNA_NAME(name_)) };
 
 /****************************************************************************************/
 

@@ -3,7 +3,8 @@
 
 #include "base/mlb_config.h"
 
-#include "mlb_util.h"
+#include "base/mlb_common.h"
+#include "mlb_arduino_util.h"
 #include "mlb_arduino_co.h"
 #include "mlb_live_bool.h"
 
@@ -17,10 +18,11 @@ typedef struct MlbLed
   const bool *v;
 } MlbLed;
 
-#define MLB_LED_STATIC_INIT_NB(pin) { pin }
+#define MLB_LED_INIT_NB(pin_) { pin_ }
 /* Initializes a steady led not monitoring any bool */
 
-#define MLB_LED_STATIC_INIT(pin, b) { pin, b }
+#define MLB_LED_INIT(pin_, b_) { pin_, &(b_) }
+#define MLB_LED_INIT_LB(pin_, lb_) { pin_, &(lb_).v }
 
 /****************************************************************************************/
 
@@ -49,7 +51,7 @@ static inline MlbLed *mlb_led_post(MlbLed *led)
 static inline MlbLed *mlb_led_init(MlbLed *led, uint8_t i_pin, const bool *v)
 {
   assert(led != NULL);
-  *led = (MlbLed) { i_pin, v };
+  *led = MLB_INITIALIZER(MlbLed, i_pin, v);
   return mlb_led_post(led);
 }
 
@@ -83,10 +85,16 @@ typedef struct MlbLeds
   uint8_t flags;
 } MlbLeds;
 
-#define MLB_LEDS_STATIC_INIT_NB(N) { (MlbLed [N]) { 0 }, N }
+#define MLB_LEDSA_NAME(name_) MLB_PP_CONCAT(name_, _ledsa)
 
-#define MLB_LEDS_STATIC_INIT(...)\
-  { (MlbLed []) { __VA_ARGS__ }, MLB_ARRAY_N(((MlbLed []) { __VA_ARGS__ })) }
+#define MLB_LEDS_NB_N(linkage_, name_, n_)\
+  static MlbLed MLB_LEDSA_NAME(name_)[n_] = { 0 };\
+  linkage_ MlbLeds name_ = { MLB_LEDSA_NAME(name_), n_ };
+/* This leds will still need to be attached to pins */
+
+#define MLB_LEDS(linkage_, name_, ...)\
+  static MlbLed MLB_LEDSA_NAME(name_)[] = { __VA_ARGS__ };\
+  linkage_ MlbLeds name_ = { MLB_LEDSA_NAME(name_), MLB_ARRAY_N(MLB_LEDSA_NAME(name_)) };
 
 /****************************************************************************************/
 
@@ -107,7 +115,7 @@ static inline MlbLeds *mlb_leds_post(MlbLeds *mlb_leds)
 static inline MlbLeds *mlb_leds_init(MlbLeds *mlb_leds, MlbLed *leds, unsigned n)
 { 
   assert(mlb_leds != NULL);
-  *mlb_leds = (MlbLeds) { leds, n };
+  *mlb_leds = MLB_INITIALIZER(MlbLeds, leds, n);
   /* Doesn't call 'mlb_leds_post' */
   return mlb_leds;
 }

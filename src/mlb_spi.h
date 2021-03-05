@@ -3,7 +3,8 @@
 
 #include "base/mlb_config.h"
 
-#include "mlb_util.h"
+#include "base/mlb_common.h"
+#include "mlb_arduino_util.h"
 
 C_LINKAGE_BEGIN
 
