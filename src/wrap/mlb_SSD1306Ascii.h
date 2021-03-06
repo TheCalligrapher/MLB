@@ -40,10 +40,10 @@ void asc1306_set_col(void *p, uint8_t col);
 
 typedef struct MlbSSD1306AsciiTickerState
 {
-#ifdef ARDUINO_ARCH_SAMD
-  char fill[40];
-#else
+#ifdef ARDUINO_ARCH_AVR
   char fill[22];
+#else
+  char fill[40];
 #endif
 } MlbSSD1306AsciiTickerState;
 

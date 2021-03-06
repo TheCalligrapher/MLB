@@ -67,7 +67,7 @@ CO_FUNCTION_DEFINITION(mlb_leds_execute)
       {
         if (MLB_CMPSET(COL.states[COL.i_led], *led->v))
         {
-          mlb_led_set(led, *led->v);
+          mlb_led_tick(led);
           CO_YIELD();
         }
       }

@@ -4,6 +4,8 @@
 #include "base/mlb_config.h"
 
 #include "base/mlb_common.h"
+
+#define CO_ENABLE_ROOT_CONTEXT 1
 #include "co/mlb_co.h"
 
 #include <Arduino.h>

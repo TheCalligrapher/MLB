@@ -1,10 +1,11 @@
 #ifndef MLB_COMMON_H_
 #define MLB_COMMON_H_
 
-#include "mlb_assert.h"
 #include "mlb_config.h"
+#include "mlb_language.h"
+#include "mlb_assert.h"
 
-#if MLB_USE_CPP_STD
+#if defined(__cplusplus) && MLB_USE_CPP_STD
   #include <climits>
   #include <cstddef>
   #include <cstdlib>
@@ -26,39 +27,21 @@
 
 /****************************************************************************************/
 
-#if MLB_USE_CPP_STD
+#if defined(__cplusplus) && MLB_USE_CPP_STD
   #define STD_ std::
 #else
   #define STD_
-#endif
-
-#if defined(_MSC_VER)
-  #define restrict __restrict
-#elif defined(__cplusplus)
-  #define restrict
-#endif
-
-#if !defined(__cplusplus) && defined(_MSC_VER)
-  typedef unsigned long long max_align_t;
-  #define alignas(n_) __declspec(align(n_))
-  #define alignof(p_) _Alignof(p_)
 #endif
 
 /****************************************************************************************/
 
 #ifdef __cplusplus
 
-  #define C_LINKAGE_BEGIN extern "C" {
-  #define C_LINKAGE_END }
-
   #define mlb_restrict
 
   #define MLB_INITIALIZER(T, ...) (T{ __VA_ARGS__ })
 
 #else /* __cplusplus */
-
-  #define C_LINKAGE_BEGIN
-  #define C_LINKAGE_END
 
   #define mlb_restrict restrict
 
@@ -100,6 +83,8 @@
 
 #define MLB_ALIGN(v_, b_) ((v_) / (b_) * (b_))
 #define MLB_ALIGN_UP(v_, b_) (((v_) + (b_) - 1u) / (b_) * (b_))
+#define MLB_IS_ALIGNED(v_, b_) ((v_) % (b_) == 0)
+#define MLB_IS_ALIGNED_PTR(p_, b_) MLB_IS_ALIGNED((STD_ uintptr_t) p_, b_)
 
 /****************************************************************************************/
 
@@ -108,7 +93,8 @@
   #if defined(_MSC_VER) && !defined(__cplusplus)
     #define MLB_STRICT_ALIGN_MAX 8u
     mlb_static_assert(alignof(STD_ max_align_t) == MLB_STRICT_ALIGN_MAX);
-    /* To make it usable under 'alignas' declared as '__declspec(align(#))' */
+    /* To make it usable under 'alignas' declared as '__declspec(align(#))'. Only literal 
+       constants are supported by such implementation */
   #else
     #define MLB_STRICT_ALIGN_MAX alignof(STD_ max_align_t)
   #endif
@@ -119,6 +105,8 @@
   #define MLB_STRICT_ALIGN(v_, b_) MLB_ALIGN(v_, b_)
   #define MLB_STRICT_ALIGN_UP(v_, b_) MLB_ALIGN_UP(v_, b_)
 
+  #define MLB_IS_STRICT_ALIGNED_PTR(p_, b_) MLB_IS_ALIGNED_PTR(p_, b_)
+
 #else /* MLB_STRICT_ALIGNMENT_REQUIRED */
 
   #define MLB_STRICT_ALIGN_MAX ((STD_ size_t) 1u)
@@ -128,6 +116,8 @@
 
   #define MLB_STRICT_ALIGN(v_, b_) (v_)
   #define MLB_STRICT_ALIGN_UP(v_, b_) (v_)
+
+  #define MLB_IS_STRICT_ALIGNED_PTR(p_, b_) true
 
 #endif /* MLB_STRICT_ALIGNMENT_REQUIRED */
 

@@ -69,9 +69,16 @@ static inline const bool *mlb_led_attach_lb(MlbLed *led, const MlbLiveBool *lb)
 }
 
 static inline void mlb_led_set(MlbLed *led, bool on)
-{ /* Can be used to directly set LED's pin state. This will persist until the next 
-     update by 'mlb_leds_execute', if it will ever occur */
+{ /* Can be used to directly set LED's pin state */
+  assert(led != NULL);
   digitalWrite(led->i_pin, mlb_bool_to_hl(on));
+}
+
+static inline void mlb_led_tick(MlbLed *led)
+{
+  assert(led != NULL);
+  if (led->v != NULL)
+    mlb_led_set(led, *led->v);
 }
 
 /****************************************************************************************/
@@ -137,10 +144,8 @@ CO_PROTOTYPE_DYNAMIC(mlb_leds_execute, MlbLeds *mlb_leds)
 }
 CO_PROTOTYPE_END
 
-#define MLB_LEDS_DYN_SUSG__(n_) ((n_) * sizeof(MlbBool))
-#define MLB_LEDS_SUSG(n_)\
-  (MLB_STRICT_ALIGN_UP(COF_SUSG(mlb_leds_execute), alignof(MlbBool)) +\
-   MLB_LBS_DYN_SUSG__(n_))
+#define MLB_LEDS_ASPS(n_)\
+  COF_ASP(mlb_leds_execute), (alignof(MlbBool), (n_) * sizeof(MlbBool))
 
 /****************************************************************************************/
 

@@ -17,7 +17,8 @@ MlbHwSerial *mlb_serial2(void);
 MlbHwSerial *mlb_serial3(void);
 MlbHwSerial *mlb_serial4(void);
 
-void mlb_hw_serial_begin(MlbHwSerial *serial, unsigned long baud);
+void mlb_hws_begin(MlbHwSerial *p, unsigned long baud);
+bool mlb_hws_is_ready(MlbHwSerial *p);
 
 /* Use 'mlb_print' for 'Print' functionality */
 /* Use 'mlb_stream' for 'Stream' functionality */

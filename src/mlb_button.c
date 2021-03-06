@@ -199,13 +199,13 @@ CO_FUNCTION_DEFINITION(mlb_buttons_execute)
     {
       MlbButton *btn = mlb_btns_at(COP.mlb_btns, COL.i);
       if (mlb_btn_is_single(btn))
-        CO_SUB_ROOT_SSIZE_INVOKE(10001, COL.sub_stacks[COL.i], sizeof COL.sub_stacks[COL.i],
+        CO_SUB_ROOT_INVOKE_SSIZE(10001, COL.sub_stacks[COL.i], sizeof COL.sub_stacks[COL.i],
           mlb_single_button_execute, btn);
       else if (mlb_btn_is_long(btn))
-        CO_SUB_ROOT_SSIZE_INVOKE(10002, COL.sub_stacks[COL.i], sizeof COL.sub_stacks[COL.i],
+        CO_SUB_ROOT_INVOKE_SSIZE(10002, COL.sub_stacks[COL.i], sizeof COL.sub_stacks[COL.i],
           mlb_long_button_execute, btn);
       else
-        CO_SUB_ROOT_SSIZE_INVOKE(10003, COL.sub_stacks[COL.i], sizeof COL.sub_stacks[COL.i], 
+        CO_SUB_ROOT_INVOKE_SSIZE(10003, COL.sub_stacks[COL.i], sizeof COL.sub_stacks[COL.i], 
           mlb_typematic_button_execute, btn);
     }
 

@@ -15,7 +15,7 @@ typedef struct MlbLiveBool
 {
   bool v;
   unsigned n_flips;
-  unsigned long duration, next_duration;
+  unsigned long mls_duration, mls_next_duration, mls_start;
 } MlbLiveBool;
 
 #define MLB_LB_INIT_OFF(on_) { 0 }
@@ -26,7 +26,7 @@ typedef struct MlbLiveBool
 /****************************************************************************************/
 
 static inline bool mlb_lb_set(MlbLiveBool *lb, bool v)
-{ 
+{ /* Steady bool */
   assert(lb != NULL);
   MLB_SWAP(bool, lb->v, v);
   lb->n_flips = 0;
@@ -43,13 +43,13 @@ static inline bool mlb_lb_flip(MlbLiveBool *lb)
 bool mlb_lb_set_for(MlbLiveBool *lb, bool v, unsigned long duration);
 
 bool mlb_lb_pulse_train(MlbLiveBool *lb, bool v, 
-                        unsigned long duration1, unsigned long duration2,
+                        unsigned long mls_duration1, unsigned long mls_duration2,
                         unsigned n_edges);
 
 static inline bool mlb_lb_pulse(MlbLiveBool *lb, bool v, 
-                                unsigned long duration1, unsigned long duration2)
+                                unsigned long mls_duration1, unsigned long mls_duration2)
 {
-  return mlb_lb_pulse_train(lb, v, duration1, duration2, UINT_MAX);
+  return mlb_lb_pulse_train(lb, v, mls_duration1, mls_duration2, UINT_MAX);
 }
 
 static inline bool mlb_lb_is(const MlbLiveBool *lb)
@@ -63,6 +63,15 @@ static inline const bool *mlb_lb_pbool(const MlbLiveBool *lb)
   assert(lb != NULL);
   return &lb->v;
 }
+
+static inline bool mlb_lb_is_running(const MlbLiveBool *lb)
+{
+  assert(lb != NULL);
+  return lb->n_flips > 0;
+}
+
+unsigned long mlb_lb_tick(MlbLiveBool *lb);
+/* Returns time remaining till the next event */
 
 /****************************************************************************************/
 
@@ -110,16 +119,7 @@ static inline MlbLiveBools *mlb_lbs_init(MlbLiveBools *mlb_lbs,
 
 /****************************************************************************************/
 
-CO_PROTOTYPE_DYNAMIC(mlb_lbs_execute, MlbLiveBools *mlb_lbs)
-{
-  unsigned long *starts;
-}
-CO_PROTOTYPE_END
-
-#define MLB_LBS_DYN_SUSG__(n_) ((n_) * sizeof(unsigned long))
-#define MLB_LBS_SUSG(n_)\
-  (MLB_STRICT_ALIGN_UP(COF_SUSG(mlb_lbs_execute), alignof(unsigned long)) +\
-   MLB_LBS_DYN_SUSG__(n_))
+CO_PROTOTYPE_NO_LOCALS(mlb_lbs_execute, MlbLiveBools *mlb_lbs);
 
 /****************************************************************************************/
 

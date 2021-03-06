@@ -18,6 +18,7 @@ typedef struct MlbSerial MlbSerial;
 MlbSerial *mlb_serial(void);
 
 void mlb_serial_begin(unsigned long baud);
+bool mlb_serial_is_ready(void);
 
 /* Use 'mlb_print' for 'Print' functionality */
 /* Use 'mlb_stream' for 'Stream' functionality */

@@ -24,10 +24,10 @@ C_LINKAGE_BEGIN
 
 typedef struct MlbarduinoFFT
 {
-#ifdef ARDUINO_ARCH_SAMD
-  char fill[32];
-#else
+#ifdef ARDUINO_ARCH_AVR
   char fill[11];
+#else
+  char fill[32];
 #endif
 } MlbarduinoFFT;
 

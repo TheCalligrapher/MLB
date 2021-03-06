@@ -16,10 +16,10 @@ C_LINKAGE_BEGIN
 
 typedef struct MlbAdafruitSSD1306
 {
-#ifdef ARDUINO_ARCH_SAMD
-  char fill[108];
-#else
+#ifdef ARDUINO_ARCH_AVR
   char fill[64];
+#else
+  char fill[108];
 #endif
 } MlbAdafruitSSD1306;
 

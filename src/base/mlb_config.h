@@ -1,7 +1,9 @@
 /****************************************************************************************/
 /* Global configuration */
 
-#define NDEBUG
+#ifndef MLB_DEBUG
+  #define MLB_DEBUG 0
+#endif /* MLB_DEBUG */
 
 #ifndef MLB_USE_STDLIB_ASSERT
   #define MLB_USE_STDLIB_ASSERT 0
@@ -21,9 +23,19 @@
 
 /****************************************************************************************/
 
-#if !defined(__cplusplus) || (defined(__GNUC__) && defined(__AVR_ARCH__))
+#if MLB_DEBUG
+  #undef NDEBUG
+#else
+  #define NDEBUG
+#endif
+
+#if defined(__GNUC__) && defined(__AVR_ARCH__)
   #define MLB_USE_CPP_STD 0
 #else
   #define MLB_USE_CPP_STD 1
+#endif
+
+#ifdef _MSC_VER
+  #pragma warning(disable: 5105)
 #endif
 

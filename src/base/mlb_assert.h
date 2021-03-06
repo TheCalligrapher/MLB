@@ -2,8 +2,10 @@
 #define MLB_ASSERT_H_
 
 #include "mlb_config.h"
+#include "mlb_language.h"
+#include "mlb_pp.h"
 
-#if MLB_USE_CPP_STD
+#if defined(__cplusplus) && MLB_USE_CPP_STD
   #if MLB_USE_STDLIB_ASSERT
     #include <cassert>
   #endif /* MLB_USE_STDLIB_ASSERT */
@@ -23,22 +25,12 @@
 /****************************************************************************************/
 
 #ifdef __cplusplus
-
-  #define mlb_static_assert(c) static_assert(c, "")
-
+  #define mlb_static_assert(c_) static_assert(c_, "")
 #else /* __cplusplus */
-
-  #ifndef _MSC_VER
-    #define mlb_static_assert(c) _Static_assert(c, "")
-  #else /* _MSC_VER */
-    #define mlb_static_assert(c) static_assert(c, "")
-  #endif /* _MSC_VER */
-
+  #define mlb_static_assert(c_) _Static_assert(c_, "")
 #endif /* !__cplusplus */
 
-#ifdef __cplusplus
-extern "C" {
-#endif /* __cplusplus */
+C_LINKAGE_BEGIN
 
 /****************************************************************************************/
 
@@ -66,8 +58,6 @@ extern "C" {
 
 /****************************************************************************************/
 
-#ifdef __cplusplus
-}
-#endif /* __cplusplus */
+C_LINKAGE_END
 
 #endif /* MLB_ASSERT_H_ */

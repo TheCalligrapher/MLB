@@ -12,37 +12,37 @@ C_LINKAGE_BEGIN
 
 typedef struct MlbTinyGpsPlus
 {
-#ifdef ARDUINO_ARCH_SAMD
-  char fill[216];
-#else
+#ifdef ARDUINO_ARCH_AVR
   char fill[173];
+#else
+  char fill[216];
 #endif
 } MlbTinyGpsPlus;
 
 typedef struct MlbTinyGpsLocation 
 {
-#ifdef ARDUINO_ARCH_SAMD
-  char fill[56];
-#else
+#ifdef ARDUINO_ARCH_AVR
   char fill[34];
+#else
+  char fill[56];
 #endif
 } MlbTinyGpsLocation;
 
 typedef struct MlbTinyGpsDate 
 {
-#ifdef ARDUINO_ARCH_SAMD
-  char fill[16];
-#else
+#ifdef ARDUINO_ARCH_AVR
   char fill[14];
+#else
+  char fill[16];
 #endif
 } MlbTinyGpsDate;
 
 typedef struct MlbTinyGpsTime 
 {
-#ifdef ARDUINO_ARCH_SAMD
-  char fill[16];
-#else
+#ifdef ARDUINO_ARCH_AVR
   char fill[14];
+#else
+  char fill[16];
 #endif
 } MlbTinyGpsTime;
 

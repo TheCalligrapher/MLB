@@ -14,10 +14,10 @@ C_LINKAGE_BEGIN
 
 typedef struct MlbSSD1306AsciiWire
 {
-#ifdef ARDUINO_ARCH_SAMD
-  char fill[36];
-#else
+#ifdef ARDUINO_ARCH_AVR
   char fill[20];
+#else
+  char fill[36];
 #endif
 } MlbSSD1306AsciiWire;
 
