@@ -108,20 +108,17 @@ CO_FUNCTION_DEFINITION(mlb_lbs_execute)
       continue;
     }
 
-    unsigned long mls_min_remaining = MLB_MLS_INF;
+    co_unschedule_delay();
 
     for (unsigned i = 0; i < COP.mlb_lbs->n; ++i)
     {
       MlbLiveBool *lb = mlb_lbs_at(COP.mlb_lbs, i);
       unsigned long mls_remaining = mlb_lb_tick(lb);
-      mls_min_remaining = MLB_MIN(mls_min_remaining, mls_remaining);
+      co_schedule_min_delay(mls_remaining);
     }
 
-    if (mls_min_remaining < MLB_MLS_INF)
-      co_delay_inline(mls_min_remaining);
-    else
-      /* No bools running */
-      CO_YIELD();
+    co_unschedule_inf_delay();
+    CO_YIELD();
   }
 
   CO_END

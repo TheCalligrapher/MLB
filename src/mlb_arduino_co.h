@@ -18,7 +18,7 @@ C_LINKAGE_BEGIN
 
 typedef struct CoRootContext
 {
-  unsigned long duration, start, local_start;
+  unsigned long mls_duration, mls_start, mls_local_start;
 } CoRootContext;
 
 static inline void co_init_root_context(CoRootContext *corc)
@@ -28,16 +28,16 @@ static inline void co_init_root_context(CoRootContext *corc)
 
 static inline bool co_process_root_context(CoRootContext *corc)
 { 
-  if (corc->duration == 0)
+  if (corc->mls_duration == 0)
     return true;
 
-  if (corc->duration == MLB_MLS_INF)
+  if (corc->mls_duration == MLB_MLS_INF)
     return false;
 
-  if (mlb_millis() - corc->start < corc->duration)
+  if (mlb_millis() - corc->mls_start < corc->mls_duration)
     return false;
 
-  corc->duration = 0;
+  corc->mls_duration = 0;
   return true;
 }
 
@@ -48,18 +48,43 @@ static inline bool co_process_root_context(CoRootContext *corc)
 /****************************************************************************************/
 /* Guarantees at least one 'CO_YIELD()', even if the requested duration is zero */
 
-#define co_delay_inline(ul_duration) do {\
-    CORC.start = mlb_millis();\
-    CORC.duration = ul_duration;\
+#define co_delay_inline(mls_duration_) do {\
+    CORC.mls_start = mlb_millis();\
+    CORC.mls_duration = (mls_duration_);\
     CO_YIELD__(1);\
   } while (0)
 
-CO_PROTOTYPE_NO_LOCALS(co_delay, unsigned long duration);
+CO_PROTOTYPE_NO_LOCALS(co_delay, unsigned long mls_duration);
+
+/****************************************************************************************/
+/* Schedule a delay to be executed by a subsequent co-yield. These calls do not yield 
+   by themselves */
+
+#define co_unschedule_delay() do {\
+    CORC.mls_duration = 0;\
+  } while (0)
+
+#define co_schedule_delay(mls_duration_) do {\
+    CORC.mls_start = mlb_millis();\
+    CORC.mls_duration = (mls_duration_);\
+  } while (0)
+
+#define co_unschedule_inf_delay() do {\
+    if (CORC.mls_duration == MLB_MLS_INF)\
+      co_unschedule_delay();\
+  } while (0)
+
+#define co_schedule_min_delay(mls_duration_) do {\
+    if (CORC.mls_duration == 0)\
+      co_schedule_delay(mls_duration_);\
+    else\
+      CORC.mls_duration = MLB_MIN(CORC.mls_duration, (mls_duration_));\
+  } while (0)
 
 /****************************************************************************************/
 
-#define co_wait_for_pin_inline(ui8_pin /* p */, ui8_target_state /* p */) do {\
-    while (digitalRead(ui8_pin) != (ui8_target_state))\
+#define co_wait_for_pin_inline(pin_ /* r */, target_state_ /* r */) do {\
+    while (digitalRead(pin_) != (target_state_))\
       CO_YIELD__(1);\
   } while (0)
 
@@ -67,17 +92,18 @@ CO_PROTOTYPE_NO_LOCALS(co_wait_for_pin, uint8_t i_pin, uint8_t target_state);
 
 /****************************************************************************************/
 
-#define co_wait_for_stable_pin_inline(ui8_pin /* p */, ui8_target_state /* p */) do {\
+#define co_wait_for_stable_pin_inline(pin_ /* r */, target_state_ /* r */) do {\
     bool retry;\
     do\
     {\
-      while (digitalRead(ui8_pin) != (ui8_target_state))\
+      while (digitalRead(pin_) != (target_state_))\
         CO_YIELD__(1);\
       \
       retry = false;\
-      for (CORC.start = mlb_millis(); mlb_millis() - CORC.start < MLB_STATE_DEBOUNCING_DELAY; )\
+      for (CORC.mls_start = mlb_millis();\
+           mlb_millis() - CORC.mls_start < MLB_STATE_DEBOUNCING_DELAY; )\
       {\
-        if ((retry = digitalRead(ui8_pin) != (ui8_target_state)))\
+        if ((retry = digitalRead(pin_) != (target_state_)))\
           break;\
         CO_YIELD__(2);\
         retry = false;\
@@ -89,49 +115,49 @@ CO_PROTOTYPE_NO_LOCALS(co_wait_for_stable_pin, uint8_t i_pin, uint8_t target_sta
 
 /****************************************************************************************/
 
-#define co_wait_for_pin_lim_inline(ui8_pin /* p */, ui8_target_state /* p */,\
-                                   ul_duration /* p */ , ui8_final_state /* w */) do {\
-    (ui8_final_state) = digitalRead(ui8_pin);\
-    if ((ul_duration) == 0)\
+#define co_wait_for_pin_lim_inline(pin_ /* r */, target_state_ /* r */,\
+                                   mls_duration_ /* r */ , final_state_ /* w */) do {\
+    (final_state_) = digitalRead(pin_);\
+    if ((mls_duration_) == 0)\
       break;\
     \
-    for (CORC.start = mlb_millis(); mlb_millis() - CORC.start < (ul_duration); )\
+    for (CORC.mls_start = mlb_millis(); mlb_millis() - CORC.mls_start < (mls_duration_); )\
     {\
-      if ((ui8_final_state) == (ui8_target_state))\
+      if ((final_state_) == (target_state_))\
         break;\
       \
       CO_YIELD__(1);\
-      (ui8_final_state) = digitalRead(ui8_pin);\
+      (final_state_) = digitalRead(pin_);\
     }\
   } while (0)
 
-/* Note that 'co_wait_for_pin_lim_inline' does not require 'ui8_final_state' to be 
+/* Note that 'co_wait_for_pin_lim_inline' does not require 'final_state_' to be 
    persistent */
 
 CO_PROTOTYPE_NO_LOCALS(co_wait_for_pin_lim, 
-                       uint8_t i_pin, uint8_t target_state, unsigned long duration, 
+                       uint8_t i_pin, uint8_t target_state, unsigned long mls_duration, 
                        uint8_t *mlb_restrict final_state);
 
 /****************************************************************************************/
 
-#define co_wait_for_stable_pin_lim_inline(ui8_pin /* p */, ui8_target_state /* p */,\
-                                          ul_duration /* p */ , ui8_final_state /* pw */) do {\
-    (ui8_final_state) = MLB_UNDEFINED;\
-    if ((ul_duration) == 0)\
+#define co_wait_for_stable_pin_lim_inline(pin_ /* r */, target_state_ /* r */,\
+                                          mls_duration_ /* r */ , final_state_ /* w */) do {\
+    (final_state_) = MLB_UNDEFINED;\
+    if ((mls_duration_) == 0)\
       break;\
     \
-    CORC.start = mlb_millis();\
+    CORC.mls_start = mlb_millis();\
     bool done = false;\
     do\
     {\
-      CORC.local_start = mlb_millis();\
+      CORC.mls_local_start = mlb_millis();\
       uint8_t state;\
-      while ((state = digitalRead(ui8_pin)) != (ui8_target_state))\
+      while ((state = digitalRead(pin_)) != (target_state_))\
       {\
-        if (mlb_millis() - CORC.local_start >= MLB_STATE_DEBOUNCING_DELAY)\
-          (ui8_final_state) = state;\
+        if (mlb_millis() - CORC.mls_local_start >= MLB_STATE_DEBOUNCING_DELAY)\
+          (final_state_) = state;\
         \
-        if ((done = mlb_millis() - CORC.start > (ul_duration)))\
+        if ((done = mlb_millis() - CORC.mls_start > (mls_duration_)))\
           break;\
         \
         CO_YIELD__(1);\
@@ -141,17 +167,17 @@ CO_PROTOTYPE_NO_LOCALS(co_wait_for_pin_lim,
       if (done)\
         break;\
       \
-      CORC.local_start = mlb_millis();\
-      while ((state = digitalRead(ui8_pin)) == (ui8_target_state))\
+      CORC.mls_local_start = mlb_millis();\
+      while ((state = digitalRead(pin_)) == (target_state_))\
       {\
-        if (mlb_millis() - CORC.local_start >= MLB_STATE_DEBOUNCING_DELAY)\
+        if (mlb_millis() - CORC.mls_local_start >= MLB_STATE_DEBOUNCING_DELAY)\
         {\
-          (ui8_final_state) = state;\
+          (final_state_) = state;\
           done = true;\
           break;\
         }\
         \
-        if ((done = mlb_millis() - CORC.start > (ul_duration)))\
+        if ((done = mlb_millis() - CORC.mls_start > (mls_duration_)))\
           break;\
         \
         CO_YIELD__(2);\
@@ -161,7 +187,7 @@ CO_PROTOTYPE_NO_LOCALS(co_wait_for_pin_lim,
   } while (0)
 
 CO_PROTOTYPE_NO_LOCALS(co_wait_for_stable_pin_lim, 
-                       uint8_t i_pin, uint8_t target_state, unsigned long duration, 
+                       uint8_t i_pin, uint8_t target_state, unsigned long mls_duration, 
                        uint8_t *mlb_restrict final_state);
 
 /****************************************************************************************/

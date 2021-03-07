@@ -119,7 +119,7 @@ struct CoDbgRootContext__
 #endif /* CO_REPORT_STACK_SIZE */
 
 /****************************************************************************************/
-/* Jump method */
+/* Dispatching method */
 
 /* It is important to set 'col__->cop__.co_state__' to zero once the function is completed 
    (i.e. at "full" exit, not at yield). This is to ensure that the caller knows the 
@@ -129,17 +129,24 @@ struct CoDbgRootContext__
 
   typedef void *CoState__;
 
+  #define CO_STATE_NEW__    0
+  #define CO_STATE_JOINED__ ((CoState__) (STD_ uintptr_t) -1)
+
   #define CO_LABEL__(i_) MLB_PP_CONCAT(MLB_PP_CONCAT(MLB_PP_CONCAT(co_lbl__, __LINE__), _), i_)
   #define CO_STATE__(i_) &&CO_LABEL__(i_)
 
   #define CO_STATE_DISPATCHER_BEGIN__\
-    if (col__->cop__.co_state__ != 0) goto *col__->cop__.co_state__;
+    assert(col__->cop__.co_state__ != CO_STATE_JOINED__);\
+    if (col__->cop__.co_state__ != CO_STATE_NEW__) goto *col__->cop__.co_state__;
 
-  #define CO_STATE_DISPATCHER_END__ col__->cop__.co_state__ = 0;
+  #define CO_STATE_DISPATCHER_END__ col__->cop__.co_state__ = CO_STATE_JOINED__;
 
 #else /* CO_USE_RUNTIME_GOTO */
 
   typedef STD_ size_t CoState__;
+
+  #define CO_STATE_NEW__    0
+  #define CO_STATE_JOINED__ ((STD_ size_t) -1)
 
   #define CO_MAX_LINES__ 1024u
   /* Assumes that no co-function is longer than 'CO_MAX_LINES' lines, i.e. 
@@ -150,8 +157,11 @@ struct CoDbgRootContext__
   #define CO_LABEL__(i_) case CO_LINE_ID__(i_)
   #define CO_STATE__(i_) CO_LINE_ID__(i_)
 
-  #define CO_STATE_DISPATCHER_BEGIN__ switch (col__->cop__.co_state__) { case 0:
-  #define CO_STATE_DISPATCHER_END__ } col__->cop__.co_state__ = 0;
+  #define CO_STATE_DISPATCHER_BEGIN__\
+    assert(col__->cop__.co_state__ != CO_STATE_JOINED__);\
+    switch (col__->cop__.co_state__) { case CO_STATE_NEW__:
+
+  #define CO_STATE_DISPATCHER_END__ } col__->cop__.co_state__ = CO_STATE_JOINED__;
 
 #endif /* CO_USE_RUNTIME_GOTO */
 
@@ -200,14 +210,17 @@ struct CoDbgRootContext__
 #define COP (col__->cop__)
 
 #define CO_PROTOTYPE(f_, ...)\
-  COL_TYPE__(f_); /* a forward declaration */\
+  COL_TYPE__(f_);\
   CO_PROTOTYPE__(f_);\
   COL_BEGIN_STATIC__(f_, ##__VA_ARGS__)
 
 #define CO_PROTOTYPE_DYNAMIC(f_, ...)\
-  COL_TYPE__(f_); /* a forward declaration */\
+  COL_TYPE__(f_);\
   CO_PROTOTYPE__(f_);\
   COL_BEGIN_DYNAMIC__(f_, ##__VA_ARGS__)
+
+/* A forward declaration of 'COL_TYPE__(f_)' is made before 'CO_PROTOTYPE__(f_)' to 
+   prevent 'COL_TYPE__(f_)' in parameter list from becoming a prototype-scope declaration */
 
 #define CO_PROTOTYPE_END COL_END__
 
@@ -280,7 +293,7 @@ struct CoDbgRootContext__
   } while (0)
 
 #define CO_YIELD() CO_YIELD__(0)
-#define CO_RETURN() do { col__->cop__.co_state__ = 0; return; } while (0)
+#define CO_RETURN() do { col__->cop__.co_state__ = CO_STATE_JOINED__; return; } while (0)
 
 /****************************************************************************************/
 /* Standalone function definition 
@@ -333,15 +346,15 @@ struct CoDbgRootContext__
 /****************************************************************************************/
 
 #define COL_NEXT__(f_)\
-  MLB_STRICT_ALIGN_UP_PTR((COL_TYPE__(f_) *) co_brk__, alignof(COL_TYPE__(f_))) 
+  ((COL_TYPE__(f_) *) MLB_STRICT_ALIGN_UP_PTR(co_brk__, alignof(COL_TYPE__(f_))))
 
 /* Invoke a co-function from another co-function */
 #define CO_INVOKE(f_, ...) do {\
     COL_TYPE__(f_) *col_next__ = COL_NEXT__(f_);\
     assert(CO_IN_STACK__((CoByte *) col_next__ + sizeof *col_next__));\
-    col_next__->cop__ = MLB_INITIALIZER(COP_TYPE__(f_), 0, ##__VA_ARGS__ );\
+    col_next__->cop__ = MLB_INITIALIZER(COP_TYPE__(f_), CO_STATE_NEW__, ##__VA_ARGS__ );\
     while (f_(CO_RCON_ARG(corc__) CO_DBG_SUSG_ARG(codrc__) col_next__),\
-           col_next__->cop__.co_state__ != 0) {\
+           col_next__->cop__.co_state__ != CO_STATE_JOINED__) {\
       CO_YIELD();\
       col_next__ = COL_NEXT__(f_);\
     }\
@@ -349,8 +362,7 @@ struct CoDbgRootContext__
 
 /****************************************************************************************/
 
-#define COF_ASP(f_) (alignof(COL_TYPE__(f_)), sizeof(COL_TYPE__(f_)))
-/* ASP stands "for alignment-size pair" */
+/* "ASP" stands for "alignment/size pair" */
 
 #define CO_SUM_ASPS__(susg_, p_)\
   (MLB_STRICT_ALIGN_UP(susg_, MLB_PP_AT(p_, 0)) + MLB_PP_AT(p_, 1))
@@ -361,12 +373,10 @@ struct CoDbgRootContext__
 #define CO_FULL_SUSG(...) CO_SUSG((1, CO_ROOT_SUSG), ##__VA_ARGS__)
 /* Stack usage starting from and including root context  */
 
-/****************************************************************************************/
+#define COF_ASP(f_) (alignof(COL_TYPE__(f_)), sizeof(COL_TYPE__(f_)))
 
 #define COF_ASP_M__(f_) , COF_ASP(f_)
-
-#define COF_SUSG(...)\
-  CO_SUSG(MLB_PP_APPLY_FM_U(COF_ASP, COF_ASP_M__, ##__VA_ARGS__))
+#define COF_SUSG(...) CO_SUSG(MLB_PP_APPLY_FM_U(COF_ASP, COF_ASP_M__, ##__VA_ARGS__))
 /* Expects a list of co-function names */
 
 #define COF_FULL_SUSG(...)\
@@ -398,15 +408,17 @@ struct CoDbgRootContext__
     \
     CO_RCON_ONLY(\
       CoRootContext *corc__ = (CoRootContext *) co_brk__;\
-      co_brk__ += sizeof *corc__;\
+      co_brk__ += CO_ROOT_SUSG;\
       assert(CO_IN_STACK__(co_brk__));\
     )\
     \
     COL_TYPE__(f_) *col_first__ = COL_NEXT__(f_);\
     assert(CO_IN_STACK__((CoByte *) col_first__ + sizeof *col_first__));\
-    if (col_first__->cop__.co_state__ == 0) {\
+    if (col_first__->cop__.co_state__ == CO_STATE_JOINED__)\
+      break;\
+    if (col_first__->cop__.co_state__ == CO_STATE_NEW__) {\
       CO_RCON_ONLY(co_init_root_context(corc__));\
-      col_first__->cop__ = MLB_INITIALIZER(COP_TYPE__(f_), 0, ##__VA_ARGS__);\
+      col_first__->cop__ = MLB_INITIALIZER(COP_TYPE__(f_), CO_STATE_NEW__, ##__VA_ARGS__);\
     }\
     \
     CO_RCON_ONLY(\
@@ -455,19 +467,23 @@ struct CoDbgRootContext__
 
 #define CO_ROOT_INVOKE_SSIZE(id_, ssize_, f_, ...) do {\
     static alignas(CO_STACK_ALIGN) CoByte co_stack__[ssize_];\
-    if (COP_FIRST__(co_stack__, f_).co_state__ == 0) ++co_entries__;\
-    CO_ROOT_INVOKE__(id_, co_stack__, ssize_, f_, ##__VA_ARGS__);\
-    if (COP_FIRST__(co_stack__, f_).co_state__ == 0) --co_entries__;\
+    CoByte *co_brk__ = co_stack__ + CO_ROOT_SUSG;\
+    COL_TYPE__(f_) *col_first__ = COL_NEXT__(f_);\
+    if (col_first__->cop__.co_state__ != CO_STATE_JOINED__) {\
+      if (col_first__->cop__.co_state__ == CO_STATE_NEW__) ++co_entries__;\
+      CO_ROOT_INVOKE__(id_, co_stack__, ssize_, f_, ##__VA_ARGS__);\
+      if (col_first__->cop__.co_state__ == CO_STATE_JOINED__) --co_entries__;\
+    }\
   } while (0)
 
 #define CO_ROOT_INVOKE_ASPS(id_, asps_, f_, ...)\
   CO_ROOT_INVOKE_SSIZE(id_, CO_FULL_SUSG(asps_), f_, ##__VA_ARGS__)
 
 #define CO_ROOT_INVOKE_FS(id_, fs_, f_, ...)\
-  CO_ROOT_INVOKE_SSIZE_L(id_, COF_FULL_SUSG(MLB_PP_UNWRAP(fs_)), f_, ##__VA_ARGS__)
+  CO_ROOT_INVOKE_SSIZE(id_, COF_FULL_SUSG(MLB_PP_UNWRAP(fs_)), f_, ##__VA_ARGS__)
 
 #define CO_ROOT_INVOKE(id_, f_, ...)\
-  CO_ROOT_INVOKE_SUSG(id_, COF_FULL_SUSG(f_), f_, ##__VA_ARGS__)
+  CO_ROOT_INVOKE_SSIZE(id_, COF_FULL_SUSG(f_), f_, ##__VA_ARGS__)
 
 #define CO_ROOT_BEGIN do { unsigned co_entries__ = 0; do {
 #define CO_ROOT_END } while (co_entries__ > 0); } while (0);

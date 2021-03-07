@@ -2,9 +2,9 @@
 #include "mlb_print.h"
 
 CO_FUNCTION_DEFINITION(co_delay)
-{ /* Guarantees at least one 'CO_YIELD()', even if requested 'duration' is zero */
+{ /* Guarantees at least one 'CO_YIELD()', even if requested 'mls_duration' is zero */
   CO_BEGIN
-  co_delay_inline(COP.duration);
+  co_delay_inline(COP.mls_duration);
   CO_END
 }
 
@@ -26,7 +26,7 @@ CO_FUNCTION_DEFINITION(co_wait_for_pin_lim)
 {
   CO_BEGIN
   assert(COP.final_state != NULL);
-  co_wait_for_pin_lim_inline(COP.i_pin, COP.target_state, COP.duration, *COP.final_state);
+  co_wait_for_pin_lim_inline(COP.i_pin, COP.target_state, COP.mls_duration, *COP.final_state);
   CO_END
 }
 
@@ -34,7 +34,7 @@ CO_FUNCTION_DEFINITION(co_wait_for_stable_pin_lim)
 {
   CO_BEGIN
   assert(COP.final_state != NULL);
-  co_wait_for_stable_pin_lim_inline(COP.i_pin, COP.target_state, COP.duration, *COP.final_state);
+  co_wait_for_stable_pin_lim_inline(COP.i_pin, COP.target_state, COP.mls_duration, *COP.final_state);
   CO_END
 }
 
