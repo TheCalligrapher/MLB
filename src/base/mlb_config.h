@@ -26,7 +26,9 @@
 #if MLB_DEBUG
   #undef NDEBUG
 #else
-  #define NDEBUG
+  #ifndef NDEBUG
+    #define NDEBUG
+  #endif
 #endif
 
 #if defined(__GNUC__) && defined(__AVR_ARCH__)

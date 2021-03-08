@@ -168,20 +168,35 @@ struct CoDbgRootContext__
 /****************************************************************************************/
 /* Locals and parameters */
 
-#define COP_TYPE__(f_) struct MLB_PP_CONCAT(CoParams__, f_)
-#define COL_TYPE__(f_) struct MLB_PP_CONCAT(CoLocals__, f_)
+#ifdef __cplusplus
+
+  #define COP_TYPE__(f_) MLB_PP_CONCAT(CoParams__, f_)
+  #define COP_TYPE_DECL__(f_) struct COP_TYPE__(f_)
+
+  #define COL_TYPE__(f_) MLB_PP_CONCAT(CoLocals__, f_)
+  #define COL_TYPE_DECL__(f_) struct COL_TYPE__(f_)
+
+#else /* __cplusplus */
+
+  #define COP_TYPE__(f_) struct MLB_PP_CONCAT(CoParams__, f_)
+  #define COP_TYPE_DECL__(f_) COP_TYPE__(f_)
+
+  #define COL_TYPE__(f_) struct MLB_PP_CONCAT(CoLocals__, f_)
+  #define COL_TYPE_DECL__(f_) COL_TYPE__(f_)
+
+#endif /* __cplusplus */
 
 #define COL_BEGIN_STATIC__(f_, ...)\
-  COP_TYPE__(f_) { CoState__ co_state__; CO_PP_SEMIS(__VA_ARGS__) };\
-  COL_TYPE__(f_) {\
+  COP_TYPE_DECL__(f_) { CoState__ co_state__; CO_PP_SEMIS(__VA_ARGS__) };\
+  COL_TYPE_DECL__(f_) {\
     COP_TYPE__(f_) cop__;\
     struct
 /* 'co_state__' is made a member of 'cop__' just to avoid dealing with an empty 
    struct type when there are no params */
 
 #define COL_BEGIN_DYNAMIC__(f_, ...)\
-  COP_TYPE__(f_) { CoState__ co_state__; CO_PP_SEMIS(__VA_ARGS__) };\
-  COL_TYPE__(f_) {\
+  COP_TYPE_DECL__(f_) { CoState__ co_state__; CO_PP_SEMIS(__VA_ARGS__) };\
+  COL_TYPE_DECL__(f_) {\
     COP_TYPE__(f_) cop__;\
     CoByte *co_persistent_brk__;\
     struct
@@ -210,12 +225,12 @@ struct CoDbgRootContext__
 #define COP (col__->cop__)
 
 #define CO_PROTOTYPE(f_, ...)\
-  COL_TYPE__(f_);\
+  COL_TYPE_DECL__(f_);\
   CO_PROTOTYPE__(f_);\
   COL_BEGIN_STATIC__(f_, ##__VA_ARGS__)
 
 #define CO_PROTOTYPE_DYNAMIC(f_, ...)\
-  COL_TYPE__(f_);\
+  COL_TYPE_DECL__(f_);\
   CO_PROTOTYPE__(f_);\
   COL_BEGIN_DYNAMIC__(f_, ##__VA_ARGS__)
 
@@ -224,7 +239,7 @@ struct CoDbgRootContext__
 
 #define CO_PROTOTYPE_END COL_END__
 
-#ifndef _MSC_VER
+#if !defined(_MSC_VER) || defined(__cplusplus)
   #define CO_PROTOTYPE_NO_LOCALS(f_, ...)\
     CO_PROTOTYPE(f_, ##__VA_ARGS__) {} CO_PROTOTYPE_END
 #else
@@ -438,12 +453,37 @@ struct CoDbgRootContext__
   } while (0)
 
 /****************************************************************************************/
+
+#define CO_STACK_NAME__(id_) MLB_PP_CONCAT(co_stack__, id_)
+
+#define CO_DEFINE_STACK__(storage_, id_, ssize_)\
+  alignas(CO_STACK_ALIGN) storage_ CoByte CO_STACK_NAME__(id_)[ssize_] = { 0 };
+
+#define CO_DEFINE_STACK_SSIZE(id_, ssize_) CO_DEFINE_STACK__(static, id_, ssize_)
+#define CO_DEFINE_STACK(id_, f_) CO_DEFINE_STACK__(static, id_, COF_FULL_SUSG(f_))
+
+#define CO_DEFINE_STACK_ASPS(id_, asps_)\
+  CO_DEFINE_STACK__(static, id_, CO_FULL_SUSG(asps_))
+
+#define CO_DEFINE_STACK_FS(id_, fs_)\
+  CO_DEFINE_STACK__(static, id_, COF_FULL_SUSG(MLB_PP_UNWRAP(fs_)))
+
+#define CO_DEFINE_LOCAL_STACK_SSIZE(id_, ssize_) CO_DEFINE_STACK__(, id_, ssize_)
+#define CO_DEFINE_LOCAL_STACK(id_, f_) CO_DEFINE_STACK__(, id_, COF_FULL_SUSG(f_))
+
+#define CO_DEFINE_LOCAL_STACK_ASPS(id_, asps_)\
+  CO_DEFINE_STACK__(, id_, CO_FULL_SUSG(asps_))
+
+#define CO_DEFINE_LOCAL_STACK_FS(id_, fs_)\
+  CO_DEFINE_STACK__(, id_, COF_FULL_SUSG(MLB_PP_UNWRAP(fs_)))
+
+/****************************************************************************************/
 /* Invocation in an externally imposed cycle (Arduino's 'loop()' function etc.)
    Repetitive invocation: once/if coroutine is completed it is invoked again from scratch */
 
 #define CO_ROOT_INVOKE_SSIZE_L(id_, ssize_, f_, ...) do {\
-    static alignas(CO_STACK_ALIGN) CoByte co_stack__[ssize_];\
-    CO_ROOT_INVOKE__(id_, co_stack__, ssize_, f_, ##__VA_ARGS__);\
+    CO_DEFINE_STACK_SSIZE(id_, ssize_);\
+    CO_ROOT_INVOKE__(id_, CO_STACK_NAME__(id_), ssize_, f_, ##__VA_ARGS__);\
   } while (0)
 
 #define CO_ROOT_INVOKE_ASPS_L(id_, asps_, f_, ...)\
@@ -463,27 +503,17 @@ struct CoDbgRootContext__
 /****************************************************************************************/
 /* Invocation in a normal program flow: invoked between 'CO_ROOT_BEGIN' and 'CO_ROOT_END', 
    waits till all co-threads complete (i.e. "join"), then continues execution after 
-   'CO_ROOT_END' */
+   'CO_ROOT_END'. In this usage mode the co-stacks have to declared separately previously */
 
-#define CO_ROOT_INVOKE_SSIZE(id_, ssize_, f_, ...) do {\
-    static alignas(CO_STACK_ALIGN) CoByte co_stack__[ssize_];\
-    CoByte *co_brk__ = co_stack__ + CO_ROOT_SUSG;\
+#define CO_ROOT_INVOKE(id_, f_, ...) do {\
+    CoByte *co_brk__ = CO_STACK_NAME__(id_) + CO_ROOT_SUSG;\
     COL_TYPE__(f_) *col_first__ = COL_NEXT__(f_);\
     if (col_first__->cop__.co_state__ != CO_STATE_JOINED__) {\
       if (col_first__->cop__.co_state__ == CO_STATE_NEW__) ++co_entries__;\
-      CO_ROOT_INVOKE__(id_, co_stack__, ssize_, f_, ##__VA_ARGS__);\
+      CO_ROOT_INVOKE__(id_, CO_STACK_NAME__(id_), sizeof CO_STACK_NAME__(id_), f_, ##__VA_ARGS__);\
       if (col_first__->cop__.co_state__ == CO_STATE_JOINED__) --co_entries__;\
     }\
   } while (0)
-
-#define CO_ROOT_INVOKE_ASPS(id_, asps_, f_, ...)\
-  CO_ROOT_INVOKE_SSIZE(id_, CO_FULL_SUSG(asps_), f_, ##__VA_ARGS__)
-
-#define CO_ROOT_INVOKE_FS(id_, fs_, f_, ...)\
-  CO_ROOT_INVOKE_SSIZE(id_, COF_FULL_SUSG(MLB_PP_UNWRAP(fs_)), f_, ##__VA_ARGS__)
-
-#define CO_ROOT_INVOKE(id_, f_, ...)\
-  CO_ROOT_INVOKE_SSIZE(id_, COF_FULL_SUSG(f_), f_, ##__VA_ARGS__)
 
 #define CO_ROOT_BEGIN do { unsigned co_entries__ = 0; do {
 #define CO_ROOT_END } while (co_entries__ > 0); } while (0);

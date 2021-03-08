@@ -53,7 +53,7 @@ static inline uint8_t mlb_bool_to_hl(bool b)
 
 static inline bool mlb_hl_to_bool(uint8_t hl)
 {
-  return hl == LOW;
+  return hl == HIGH;
 }
 
 /****************************************************************************************/
