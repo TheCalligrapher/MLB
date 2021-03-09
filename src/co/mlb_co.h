@@ -367,12 +367,13 @@ struct CoDbgRootContext__
 #define CO_INVOKE(f_, ...) do {\
     COL_TYPE__(f_) *col_next__ = COL_NEXT__(f_);\
     assert(CO_IN_STACK__((CoByte *) col_next__ + sizeof *col_next__));\
-    col_next__->cop__ = MLB_INITIALIZER(COP_TYPE__(f_), CO_STATE_NEW__, ##__VA_ARGS__ );\
+    MLB_CONSTRUCT(COP_TYPE__(f_), &col_next__->cop__, { CO_STATE_NEW__, ##__VA_ARGS__ });\
     while (f_(CO_RCON_ARG(corc__) CO_DBG_SUSG_ARG(codrc__) col_next__),\
            col_next__->cop__.co_state__ != CO_STATE_JOINED__) {\
       CO_YIELD();\
       col_next__ = COL_NEXT__(f_);\
     }\
+    MLB_DESTRUCT(COP_TYPE__(f_), &col_next__->cop__);\
   } while (0)
 
 /****************************************************************************************/
@@ -414,7 +415,7 @@ struct CoDbgRootContext__
     CO_DBG_SUSG_ONLY(\
       static struct CoDbgRootContext__ s_codrc__;\
       if (s_codrc__.co_id__ == 0)\
-        s_codrc__ = MLB_INITIALIZER(struct CoDbgRootContext__, (id_), (stack_), (ssize_));\
+        s_codrc__ = MLB_INITIALIZER(struct CoDbgRootContext__, { (id_), (stack_), (ssize_) });\
       struct CoDbgRootContext__ *const codrc__ = &s_codrc__;\
     )\
     \
@@ -433,7 +434,7 @@ struct CoDbgRootContext__
       break;\
     if (col_first__->cop__.co_state__ == CO_STATE_NEW__) {\
       CO_RCON_ONLY(co_init_root_context(corc__));\
-      col_first__->cop__ = MLB_INITIALIZER(COP_TYPE__(f_), CO_STATE_NEW__, ##__VA_ARGS__);\
+      MLB_CONSTRUCT(COP_TYPE__(f_), &col_first__->cop__, { CO_STATE_NEW__, ##__VA_ARGS__ });\
     }\
     \
     CO_RCON_ONLY(\
@@ -442,6 +443,9 @@ struct CoDbgRootContext__
     )\
     \
     f_(CO_RCON_ARG(corc__) CO_DBG_SUSG_ARG(codrc__) col_first__);\
+    \
+    if (col_first__->cop__.co_state__ == CO_STATE_JOINED__)\
+      MLB_DESTRUCT(COP_TYPE__(f_), &col_first__->cop__);\
     \
     CO_SUSG_ONLY(\
       static STD_ size_t s_co_max_stack_usage__;\

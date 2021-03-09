@@ -6,12 +6,24 @@
 #include "mlb_assert.h"
 
 #if defined(__cplusplus) && MLB_USE_CPP_STD
+  /* C++ */
   #include <climits>
   #include <cstddef>
   #include <cstdlib>
   #include <cstdint>
   #include <cstdarg>
-#else 
+  #include <new>
+#elif defined(__cplusplus)
+  /* C++ with C-style headers */
+  #include <limits.h>
+  #include <stddef.h>
+  #include <stdlib.h>
+  #include <stdbool.h>
+  #include <stdint.h>
+  #include <stdarg.h>
+  #include <new.h>
+#else
+  /* C */
   #include <limits.h>
   #include <stddef.h>
   #include <stdlib.h>
@@ -39,13 +51,17 @@
 
   #define mlb_restrict
 
-  #define MLB_INITIALIZER(T, ...) (T{ __VA_ARGS__ })
+  #define MLB_INITIALIZER(T_, ...) (T_  __VA_ARGS__ )
+  #define MLB_CONSTRUCT(T_, p_, ...) (new (p_) T_ __VA_ARGS__)
+  #define MLB_DESTRUCT(T_, p_) ((p_)->~T_())
 
 #else /* __cplusplus */
 
   #define mlb_restrict restrict
 
-  #define MLB_INITIALIZER(T, ...) ((T) { __VA_ARGS__ })
+  #define MLB_INITIALIZER(T_, ...) ((T_) __VA_ARGS__)
+  #define MLB_CONSTRUCT(T_, p_, ...) (*(p_) = (T_) __VA_ARGS__)
+  #define MLB_DESTRUCT(T_, p_)
 
 #endif /* __cplusplus */
 

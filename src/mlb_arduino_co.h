@@ -23,7 +23,7 @@ typedef struct CoRootContext
 
 static inline void co_init_root_context(CoRootContext *corc)
 {
-  *corc = MLB_INITIALIZER(CoRootContext, 0);
+  *corc = MLB_INITIALIZER(CoRootContext, { 0 });
 }
 
 static inline bool co_process_root_context(CoRootContext *corc)

@@ -51,7 +51,7 @@ static inline MlbLed *mlb_led_post(MlbLed *led)
 static inline MlbLed *mlb_led_init(MlbLed *led, uint8_t i_pin, const bool *v)
 {
   assert(led != NULL);
-  *led = MLB_INITIALIZER(MlbLed, i_pin, v);
+  *led = MLB_INITIALIZER(MlbLed, { i_pin, v });
   return mlb_led_post(led);
 }
 
@@ -122,7 +122,7 @@ static inline MlbLeds *mlb_leds_post(MlbLeds *mlb_leds)
 static inline MlbLeds *mlb_leds_init(MlbLeds *mlb_leds, MlbLed *leds, unsigned n)
 { 
   assert(mlb_leds != NULL);
-  *mlb_leds = MLB_INITIALIZER(MlbLeds, leds, n);
+  *mlb_leds = MLB_INITIALIZER(MlbLeds, { leds, n });
   /* Doesn't call 'mlb_leds_post' */
   return mlb_leds;
 }

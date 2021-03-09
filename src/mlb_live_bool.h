@@ -112,7 +112,7 @@ static inline MlbLiveBools *mlb_lbs_init(MlbLiveBools *mlb_lbs,
                                          MlbLiveBool *lbs, unsigned n)
 { 
   assert(mlb_lbs != NULL);
-  *mlb_lbs = MLB_INITIALIZER(MlbLiveBools, lbs, n);
+  *mlb_lbs = MLB_INITIALIZER(MlbLiveBools, { lbs, n });
   /* Doesn't call 'mlb_lbs_post' */
   return mlb_lbs;
 }
