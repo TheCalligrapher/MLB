@@ -1,7 +1,6 @@
 #include "mlb_SSD1306Ascii.h"
 #include "impl/mlb_wrapper.h"
 
-#include <new>
 #include <SSD1306Ascii.h>
 
 //char a[sizeof(TickerState)];

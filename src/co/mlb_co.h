@@ -165,6 +165,10 @@ struct CoDbgRootContext__
 
 #endif /* CO_USE_RUNTIME_GOTO */
 
+mlb_static_assert(CO_STATE_NEW__ == 0);
+/* It should match value of a zero-initilized 'unsigned char' array reinterpreted as a 
+   'CoState__' object */
+
 /****************************************************************************************/
 /* Locals and parameters */
 
@@ -205,6 +209,12 @@ struct CoDbgRootContext__
    (calculated) pointer to the current top of the stack */
 
 #define COL_END__ col__; };
+
+#define COL_CONSTRUCT__(f_, p_, ...) MLB_CONSTRUCT(COL_TYPE__(f_), p_, { __VA_ARGS__ })
+/* '...' stands for 'cop__' initializer. It should be enclosed into its own pair of '{}'.
+   Such 'COL_CONSTRUCT__' will also default/zero-initialize all locals */
+
+#define COL_DESTRUCT__(f_, p_) MLB_DESTRUCT(COL_TYPE__(f_), p_)
 
 /****************************************************************************************/
 /* Function declaration 
@@ -254,12 +264,12 @@ struct CoDbgRootContext__
    is the initial call or a context switch. Bootstrap restores calculated local values */
 
 #define CO_BOOTSTRAP_FRAME_STATIC__()\
-  CoByte *const co_brk__ = (CoByte *) col__ + sizeof *col__;\
+  CoByte *const co_brk__ MLB_ATTR_MAYBE_UNUSED = (CoByte *) col__ + sizeof *col__;\
   assert(CO_IN_STACK__(co_brk__));
 /* 'co_brk__' is constant */
 
 #define CO_BOOTSTRAP_FRAME_DYNAMIC__()\
-  CoByte *co_brk__ = col__->co_persistent_brk__;
+  CoByte *co_brk__ MLB_ATTR_MAYBE_UNUSED = col__->co_persistent_brk__;
 /* On initial call 'co_brk__' will end up with a meaningless value from 
    'col__->co_persistent_brk__'. 'CO_SETUP_FRAME_DYNAMIC__' will set both to a valid 
    value. 'co_brk__' is not constant */
@@ -367,13 +377,13 @@ struct CoDbgRootContext__
 #define CO_INVOKE(f_, ...) do {\
     COL_TYPE__(f_) *col_next__ = COL_NEXT__(f_);\
     assert(CO_IN_STACK__((CoByte *) col_next__ + sizeof *col_next__));\
-    MLB_CONSTRUCT(COP_TYPE__(f_), &col_next__->cop__, { CO_STATE_NEW__, ##__VA_ARGS__ });\
+    COL_CONSTRUCT__(f_, col_next__, { CO_STATE_NEW__, ##__VA_ARGS__ });\
     while (f_(CO_RCON_ARG(corc__) CO_DBG_SUSG_ARG(codrc__) col_next__),\
            col_next__->cop__.co_state__ != CO_STATE_JOINED__) {\
       CO_YIELD();\
       col_next__ = COL_NEXT__(f_);\
     }\
-    MLB_DESTRUCT(COP_TYPE__(f_), &col_next__->cop__);\
+    COL_DESTRUCT__(f_, col_next__);\
   } while (0)
 
 /****************************************************************************************/
@@ -434,7 +444,7 @@ struct CoDbgRootContext__
       break;\
     if (col_first__->cop__.co_state__ == CO_STATE_NEW__) {\
       CO_RCON_ONLY(co_init_root_context(corc__));\
-      MLB_CONSTRUCT(COP_TYPE__(f_), &col_first__->cop__, { CO_STATE_NEW__, ##__VA_ARGS__ });\
+      COL_CONSTRUCT__(f_, col_first__, { CO_STATE_NEW__, ##__VA_ARGS__ });\
     }\
     \
     CO_RCON_ONLY(\
@@ -445,7 +455,7 @@ struct CoDbgRootContext__
     f_(CO_RCON_ARG(corc__) CO_DBG_SUSG_ARG(codrc__) col_first__);\
     \
     if (col_first__->cop__.co_state__ == CO_STATE_JOINED__)\
-      MLB_DESTRUCT(COP_TYPE__(f_), &col_first__->cop__);\
+      COL_DESTRUCT__(f_, col_first__);\
     \
     CO_SUSG_ONLY(\
       static STD_ size_t s_co_max_stack_usage__;\

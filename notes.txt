@@ -1,0 +1,62 @@
+* When calling a co-function the user does not need to supply all arguments. The remaining 
+  members of 'cop__' will get default/zero-initialized.
+
+* In C++ code it is allowable to supply BOE "default arguments" for co-parameters (no 
+  commas between '{}', but commas are OK between '()'), but only staring from C++14. In 
+  C++11 this will lead to compilatior errors
+
+    struct P { int a = 1; };
+
+    struct L 
+    {
+      P p;
+      struct { int b; } l;
+    };
+
+    int main() 
+    {
+      L l = { { 1 } }; // Error in C++11, OK in C++14
+    }
+
+* In C++ code it is allowable to supply BOE initializers for co-locals. This works even in 
+  C++11
+
+    struct P { int a; };
+
+    struct L 
+    {
+      P p;
+      struct { int b = 2; } l;
+    };
+
+    int main() 
+    {
+      L l = { { 1 } }; // OK in C++11 and in C++14
+    }
+
+
+* In C++ code if a co-local wants default initialization, but has an explicit default 
+  constructor, it should be declared with an explicit '{}' initializer. Otherwise, GCC 
+  will issue warnings. Formally, implicit list-initialization of an object with explicit 
+  default constructor is ill-formed. But when the object has an explcit BOE-initializer 
+  with direct-initialization syntax, then it is OK
+
+    struct S { explicit S() {} };
+
+    struct T 
+    {
+      int a;
+      struct { S s; } b;
+    };
+
+    struct U 
+    {
+      int a;
+      struct { S s{}; } b;
+    };
+
+    int main() 
+    {
+      T t = { 1 }; // Error
+      U u = { 1 }; // OK
+    }

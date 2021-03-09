@@ -1,7 +1,6 @@
 #include "mlb_arduinoFFT.h"
 #include "impl/mlb_wrapper.h"
 
-#include <new>
 #include <arduinoFFT.h>
 
 //char a[sizeof(arduinoFFT)];

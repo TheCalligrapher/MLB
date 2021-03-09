@@ -37,7 +37,9 @@
   #define MLB_USE_CPP_STD 1
 #endif
 
-#ifdef _MSC_VER
+#if defined(__GNUC__)
+#elif defined(_MSC_VER)
   #pragma warning(disable: 5105)
 #endif
+
 

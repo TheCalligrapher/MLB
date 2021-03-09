@@ -1,7 +1,6 @@
 #include "mlb_AdafruitGFX.h"
 #include "impl/mlb_wrapper.h"
 
-#include <new>
 #include <Adafruit_GFX.h>
 
 #define MLB_CPP_WRAPPER_C_STRUCT void

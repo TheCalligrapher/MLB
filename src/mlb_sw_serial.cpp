@@ -1,7 +1,6 @@
 #include "mlb_sw_serial.h"
 #include "impl/mlb_wrapper.h"
 
-#include <new>
 #include <SoftwareSerial.h>
 
 //char a[sizeof(SoftwareSerial)];

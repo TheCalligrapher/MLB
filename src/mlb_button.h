@@ -184,7 +184,7 @@ static inline bool mlb_btn_is_depressed(const MlbButton *btn)
   return MLB_IS_BIT_SET(btn->flags, MLB_BTN_IS_DEPRESSED);
 }
 
-static inline bool mlb_btn_purge(MlbButton *btn)
+static inline void mlb_btn_purge(MlbButton *btn)
 {
   btn->n_pushes = 0;
   btn->flags = MLB_RESET_BITS(btn->flags, MLB_BTN_LONG_BUFFERED__);

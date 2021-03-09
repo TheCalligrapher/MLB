@@ -3,7 +3,6 @@
 #include "mlb_SSD1306AsciiAvrI2c.h"
 #include "impl/mlb_wrapper.h"
 
-#include <new>
 #include <SSD1306AsciiAvrI2c.h>
 
 //char a[sizeof(SSD1306AsciiAvrI2c)];

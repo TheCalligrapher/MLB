@@ -19,4 +19,11 @@
   #define C_LINKAGE_END
 #endif /* __cplusplus */
 
+#define MLB_ATTR_MAYBE_UNUSED
+
+#ifdef __GNUC__
+  #undef MLB_ATTR_MAYBE_UNUSED
+  #define MLB_ATTR_MAYBE_UNUSED __attribute__((__unused__))
+#endif
+
 #endif /* MLB_LANGUAGE_H_ */

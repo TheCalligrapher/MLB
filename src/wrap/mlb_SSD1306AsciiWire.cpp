@@ -1,7 +1,6 @@
 #include "mlb_SSD1306AsciiWire.h"
 #include "impl/mlb_wrapper.h"
 
-#include <new>
 #include <SSD1306AsciiWire.h>
 
 //char a[sizeof(SSD1306AsciiWire)];

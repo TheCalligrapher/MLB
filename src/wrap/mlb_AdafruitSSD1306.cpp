@@ -1,7 +1,6 @@
 #include "mlb_AdafruitSSD1306.h"
 #include "impl/mlb_wrapper.h"
 
-#include <new>
 #include <Adafruit_SSD1306.h>
 
 //char a[sizeof(Adafruit_SSD1306)];
