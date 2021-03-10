@@ -15,7 +15,7 @@
 
     int main() 
     {
-      L l = { { 1 } }; // Error in C++11, OK in C++14
+      L l{ { 1 } }; // Error in C++11, OK in C++14
     }
 
 * In C++ code it is allowable to supply BOE initializers for co-locals. This works even in 
@@ -31,9 +31,8 @@
 
     int main() 
     {
-      L l = { { 1 } }; // OK in C++11 and in C++14
+      L l{ { 1 } }; // OK in C++11 and in C++14
     }
-
 
 * In C++ code if a co-local wants default initialization, but has an explicit default 
   constructor, it should be declared with an explicit '{}' initializer. Otherwise, GCC 
@@ -57,6 +56,6 @@
 
     int main() 
     {
-      T t = { 1 }; // Error
-      U u = { 1 }; // OK
+      T t{ 1 }; // Error
+      U u{ 1 }; // OK
     }
